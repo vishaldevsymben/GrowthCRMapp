@@ -472,14 +472,16 @@ class ModelTask extends BakeTask {
 			}
 
 			if ($choice != $defaultChoice) {
-				$validate[$validatorName] = $choice;
 				if (is_numeric($choice) && isset($this->_validations[$choice])) {
 					$validate[$validatorName] = $this->_validations[$choice];
+				} else {
+					$validate[$validatorName] = $choice;
 				}
 			}
-			$anotherValidator = 'n';
-			if ($this->interactive && $choice != $defaultChoice) {
+			if ($this->interactive == true && $choice != $defaultChoice) {
 				$anotherValidator = $this->in(__d('cake_console', 'Would you like to add another validation rule?'), array('y', 'n'), 'n');
+			} else {
+				$anotherValidator = 'n';
 			}
 		}
 		return $validate;
@@ -581,7 +583,7 @@ class ModelTask extends BakeTask {
 
 			$pattern = '/_' . preg_quote($model->table, '/') . '|' . preg_quote($model->table, '/') . '_/';
 			$possibleJoinTable = preg_match($pattern, $otherTable);
-			if ($possibleJoinTable) {
+			if ($possibleJoinTable == true) {
 				continue;
 			}
 			foreach ($modelFieldsTemp as $fieldName => $field) {
@@ -686,7 +688,7 @@ class ModelTask extends BakeTask {
 		$prompt = __d('cake_console', 'Would you like to define some additional model associations?');
 		$wannaDoMoreAssoc = $this->in($prompt, array('y', 'n'), 'n');
 		$possibleKeys = $this->_generatePossibleKeys();
-		while (strtolower($wannaDoMoreAssoc) === 'y') {
+		while (strtolower($wannaDoMoreAssoc) == 'y') {
 			$assocs = array('belongsTo', 'hasOne', 'hasMany', 'hasAndBelongsToMany');
 			$this->out(__d('cake_console', 'What is the association type?'));
 			$assocType = intval($this->inOptions($assocs, __d('cake_console', 'Enter a number')));
@@ -696,9 +698,9 @@ class ModelTask extends BakeTask {
 			$this->hr();
 
 			$alias = $this->in(__d('cake_console', 'What is the alias for this association?'));
-			$className = $this->in(__d('cake_console', 'What className will %s use?', $alias), null, $alias);
+			$className = $this->in(__d('cake_console', 'What className will %s use?', $alias), null, $alias );
 
-			if ($assocType === 0) {
+			if ($assocType == 0) {
 				if (!empty($possibleKeys[$model->table])) {
 					$showKeys = $possibleKeys[$model->table];
 				} else {
@@ -731,7 +733,7 @@ class ModelTask extends BakeTask {
 			if (!isset($foreignKey)) {
 				$foreignKey = $this->in(__d('cake_console', 'What is the foreignKey? Specify your own.'), null, $suggestedForeignKey);
 			}
-			if ($assocType === 3) {
+			if ($assocType == 3) {
 				$associationForeignKey = $this->in(__d('cake_console', 'What is the associationForeignKey?'), null, $this->_modelKey($model->name));
 				$joinTable = $this->in(__d('cake_console', 'What is the joinTable?'));
 			}
@@ -741,7 +743,7 @@ class ModelTask extends BakeTask {
 			$associations[$assocs[$assocType]][$i]['alias'] = $alias;
 			$associations[$assocs[$assocType]][$i]['className'] = $className;
 			$associations[$assocs[$assocType]][$i]['foreignKey'] = $foreignKey;
-			if ($assocType === 3) {
+			if ($assocType == 3) {
 				$associations[$assocs[$assocType]][$i]['associationForeignKey'] = $associationForeignKey;
 				$associations[$assocs[$assocType]][$i]['joinTable'] = $joinTable;
 			}
@@ -778,7 +780,7 @@ class ModelTask extends BakeTask {
  */
 	public function bake($name, $data = array()) {
 		if (is_object($name)) {
-			if (!$data) {
+			if ($data == false) {
 				$data = array();
 				$data['associations'] = $this->doAssociations($name);
 				$data['validate'] = $this->doValidation($name);
@@ -933,7 +935,7 @@ class ModelTask extends BakeTask {
 
 		$enteredModel = '';
 
-		while (!$enteredModel) {
+		while ($enteredModel == '') {
 			$enteredModel = $this->in(__d('cake_console', "Enter a number from the list above,\n" .
 				"type in the name of another model, or 'q' to exit"), null, 'q');
 
@@ -942,17 +944,18 @@ class ModelTask extends BakeTask {
 				$this->_stop();
 			}
 
-			if (!$enteredModel || intval($enteredModel) > count($this->_modelNames)) {
+			if ($enteredModel == '' || intval($enteredModel) > count($this->_modelNames)) {
 				$this->err(__d('cake_console', "The model name you supplied was empty,\n" .
 					"or the number you selected was not an option. Please try again."));
 				$enteredModel = '';
 			}
 		}
 		if (intval($enteredModel) > 0 && intval($enteredModel) <= count($this->_modelNames)) {
-			return $this->_modelNames[intval($enteredModel) - 1];
+			$currentModelName = $this->_modelNames[intval($enteredModel) - 1];
+		} else {
+			$currentModelName = $enteredModel;
 		}
-
-		return $enteredModel;
+		return $currentModelName;
 	}
 
 /**

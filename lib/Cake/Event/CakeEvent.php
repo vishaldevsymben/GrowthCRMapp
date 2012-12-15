@@ -17,9 +17,9 @@
  */
 
 /**
- * Represents the transport class of events across the system, it receives a name, and subject and an optional
+ * Represent the transport class of events across the system, it receives a name, and subject and an optional
  * payload. The name can be any string that uniquely identifies the event across the application, while the subject
- * represents the object that the event applies to.
+ * represents the object that the event is applying to.
  *
  * @package Cake.Event
  */

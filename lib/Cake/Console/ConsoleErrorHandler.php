@@ -81,7 +81,7 @@ class ConsoleErrorHandler {
 		$message = __d('cake_console', '%s in [%s, line %s]', $description, $file, $line);
 		$stderr->write(__d('cake_console', "<error>%s Error:</error> %s\n", $name, $message));
 
-		if (!Configure::read('debug')) {
+		if (Configure::read('debug') == 0) {
 			CakeLog::write($log, $message);
 		}
 

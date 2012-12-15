@@ -125,12 +125,8 @@ class L10nTest extends CakeTestCase {
 		$expected = array('afr' => 'af', 'af' => 'afr');
 		$this->assertEquals($expected, $result);
 
-		$result = $localize->map(array('sqi', 'sq'));
-		$expected = array('sqi' => 'sq', 'sq' => 'sqi');
-		$this->assertEquals($expected, $result);
-
 		$result = $localize->map(array('alb', 'sq'));
-		$expected = array('alb' => 'sq', 'sq' => 'sqi');
+		$expected = array('alb' => 'sq', 'sq' => 'alb');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('ara', 'ar'));
@@ -141,12 +137,12 @@ class L10nTest extends CakeTestCase {
 		$expected = array('hye' => 'hy', 'hy' => 'hye');
 		$this->assertEquals($expected, $result);
 
-		$result = $localize->map(array('eus', 'eu'));
-		$expected = array('eus' => 'eu', 'eu' => 'eus');
+		$result = $localize->map(array('baq', 'eu'));
+		$expected = array('baq' => 'eu', 'eu' => 'baq');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('baq', 'eu'));
-		$expected = array('baq' => 'eu', 'eu' => 'eus');
+		$expected = array('baq' => 'eu', 'eu' => 'baq');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('bos', 'bs'));
@@ -166,11 +162,11 @@ class L10nTest extends CakeTestCase {
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('chi', 'zh'));
-		$expected = array('chi' => 'zh', 'zh' => 'zho');
+		$expected = array('chi' => 'zh', 'zh' => 'chi');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('zho', 'zh'));
-		$expected = array('zho' => 'zh', 'zh' => 'zho');
+		$expected = array('zho' => 'zh', 'zh' => 'chi');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('hrv', 'hr'));
@@ -178,11 +174,11 @@ class L10nTest extends CakeTestCase {
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('ces', 'cs'));
-		$expected = array('ces' => 'cs', 'cs' => 'ces');
+		$expected = array('ces' => 'cs', 'cs' => 'cze');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('cze', 'cs'));
-		$expected = array('cze' => 'cs', 'cs' => 'ces');
+		$expected = array('cze' => 'cs', 'cs' => 'cze');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('dan', 'da'));
@@ -190,19 +186,15 @@ class L10nTest extends CakeTestCase {
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('dut', 'nl'));
-		$expected = array('dut' => 'nl', 'nl' => 'nld');
+		$expected = array('dut' => 'nl', 'nl' => 'dut');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('nld', 'nl'));
-		$expected = array('nld' => 'nl', 'nl' => 'nld');
+		$expected = array('nld' => 'nl', 'nl' => 'dut');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('nld'));
 		$expected = array('nld' => 'nl');
-		$this->assertEquals($expected, $result);
-
-		$result = $localize->map(array('dut'));
-		$expected = array('dut' => 'nl');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('eng', 'en'));
@@ -230,11 +222,11 @@ class L10nTest extends CakeTestCase {
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('fra', 'fr'));
-		$expected = array('fra' => 'fr', 'fr' => 'fra');
+		$expected = array('fra' => 'fr', 'fr' => 'fre');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('fre', 'fr'));
-		$expected = array('fre' => 'fr', 'fr' => 'fra');
+		$expected = array('fre' => 'fr', 'fr' => 'fre');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('gla', 'gd'));
@@ -274,11 +266,11 @@ class L10nTest extends CakeTestCase {
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('ice', 'is'));
-		$expected = array('ice' => 'is', 'is' => 'isl');
+		$expected = array('ice' => 'is', 'is' => 'ice');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('isl', 'is'));
-		$expected = array('isl' => 'is', 'is' => 'isl');
+		$expected = array('isl' => 'is', 'is' => 'ice');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('ind', 'id'));
@@ -310,19 +302,19 @@ class L10nTest extends CakeTestCase {
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('mac', 'mk'));
-		$expected = array('mac' => 'mk', 'mk' => 'mkd');
+		$expected = array('mac' => 'mk', 'mk' => 'mac');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('mkd', 'mk'));
-		$expected = array('mkd' => 'mk', 'mk' => 'mkd');
+		$expected = array('mkd' => 'mk', 'mk' => 'mac');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('may', 'ms'));
-		$expected = array('may' => 'ms', 'ms' => 'msa');
+		$expected = array('may' => 'ms', 'ms' => 'may');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('msa', 'ms'));
-		$expected = array('msa' => 'ms', 'ms' => 'msa');
+		$expected = array('msa' => 'ms', 'ms' => 'may');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('mlt', 'mt'));
@@ -354,11 +346,11 @@ class L10nTest extends CakeTestCase {
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('ron', 'ro'));
-		$expected = array('ron' => 'ro', 'ro' => 'ron');
+		$expected = array('ron' => 'ro', 'ro' => 'rum');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('rum', 'ro'));
-		$expected = array('rum' => 'ro', 'ro' => 'ron');
+		$expected = array('rum' => 'ro', 'ro' => 'rum');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('rus', 'ru'));
@@ -369,16 +361,20 @@ class L10nTest extends CakeTestCase {
 		$expected = array('smi' => 'sz', 'sz' => 'smi');
 		$this->assertEquals($expected, $result);
 
+		$result = $localize->map(array('scc', 'sr'));
+		$expected = array('scc' => 'sr', 'sr' => 'scc');
+		$this->assertEquals($expected, $result);
+
 		$result = $localize->map(array('srp', 'sr'));
-		$expected = array('srp' => 'sr', 'sr' => 'srp');
+		$expected = array('srp' => 'sr', 'sr' => 'scc');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('slk', 'sk'));
-		$expected = array('slk' => 'sk', 'sk' => 'slk');
+		$expected = array('slk' => 'sk', 'sk' => 'slo');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('slo', 'sk'));
-		$expected = array('slo' => 'sk', 'sk' => 'slk');
+		$expected = array('slo' => 'sk', 'sk' => 'slo');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->map(array('slv', 'sl'));
@@ -509,7 +505,7 @@ class L10nTest extends CakeTestCase {
 
 		$result = $localize->catalog(array('cs'));
 		$expected = array(
-			'cs' => array('language' => 'Czech', 'locale' => 'ces', 'localeFallback' => 'ces', 'charset' => 'utf-8', 'direction' => 'ltr')
+			'cs' => array('language' => 'Czech', 'locale' => 'cze', 'localeFallback' => 'cze', 'charset' => 'utf-8', 'direction' => 'ltr')
 		);
 		$this->assertEquals($expected, $result);
 
@@ -587,7 +583,7 @@ class L10nTest extends CakeTestCase {
 
 		$result = $localize->catalog(array('eu'));
 		$expected = array(
-			'eu' => array('language' => 'Basque', 'locale' => 'eus', 'localeFallback' => 'eus', 'charset' => 'utf-8', 'direction' => 'ltr')
+			'eu' => array('language' => 'Basque', 'locale' => 'baq', 'localeFallback' => 'baq', 'charset' => 'utf-8', 'direction' => 'ltr')
 		);
 		$this->assertEquals($expected, $result);
 
@@ -611,12 +607,12 @@ class L10nTest extends CakeTestCase {
 
 		$result = $localize->catalog(array('fr', 'fr-be', 'fr-ca', 'fr-ch', 'fr-fr', 'fr-lu'));
 		$expected = array(
-			'fr' => array('language' => 'French (Standard)', 'locale' => 'fra', 'localeFallback' => 'fra', 'charset' => 'utf-8', 'direction' => 'ltr'),
-			'fr-be' => array('language' => 'French (Belgium)', 'locale' => 'fr_be', 'localeFallback' => 'fra', 'charset' => 'utf-8', 'direction' => 'ltr'),
-			'fr-ca' => array('language' => 'French (Canadian)', 'locale' => 'fr_ca', 'localeFallback' => 'fra', 'charset' => 'utf-8', 'direction' => 'ltr'),
-			'fr-ch' => array('language' => 'French (Swiss)', 'locale' => 'fr_ch', 'localeFallback' => 'fra', 'charset' => 'utf-8', 'direction' => 'ltr'),
-			'fr-fr' => array('language' => 'French (France)', 'locale' => 'fr_fr', 'localeFallback' => 'fra', 'charset' => 'utf-8', 'direction' => 'ltr'),
-			'fr-lu' => array('language' => 'French (Luxembourg)', 'locale' => 'fr_lu', 'localeFallback' => 'fra', 'charset' => 'utf-8', 'direction' => 'ltr')
+			'fr' => array('language' => 'French (Standard)', 'locale' => 'fre', 'localeFallback' => 'fre', 'charset' => 'utf-8', 'direction' => 'ltr'),
+			'fr-be' => array('language' => 'French (Belgium)', 'locale' => 'fr_be', 'localeFallback' => 'fre', 'charset' => 'utf-8', 'direction' => 'ltr'),
+			'fr-ca' => array('language' => 'French (Canadian)', 'locale' => 'fr_ca', 'localeFallback' => 'fre', 'charset' => 'utf-8', 'direction' => 'ltr'),
+			'fr-ch' => array('language' => 'French (Swiss)', 'locale' => 'fr_ch', 'localeFallback' => 'fre', 'charset' => 'utf-8', 'direction' => 'ltr'),
+			'fr-fr' => array('language' => 'French (France)', 'locale' => 'fr_fr', 'localeFallback' => 'fre', 'charset' => 'utf-8', 'direction' => 'ltr'),
+			'fr-lu' => array('language' => 'French (Luxembourg)', 'locale' => 'fr_lu', 'localeFallback' => 'fre', 'charset' => 'utf-8', 'direction' => 'ltr')
 		);
 		$this->assertEquals($expected, $result);
 
@@ -678,7 +674,7 @@ class L10nTest extends CakeTestCase {
 
 		$result = $localize->catalog(array('is'));
 		$expected = array(
-			'is' => array('language' => 'Icelandic', 'locale' => 'isl', 'localeFallback' => 'isl', 'charset' => 'utf-8', 'direction' => 'ltr')
+			'is' => array('language' => 'Icelandic', 'locale' => 'ice', 'localeFallback' => 'ice', 'charset' => 'utf-8', 'direction' => 'ltr')
 		);
 		$this->assertEquals($expected, $result);
 
@@ -725,14 +721,14 @@ class L10nTest extends CakeTestCase {
 
 		$result = $localize->catalog(array('mk', 'mk-mk'));
 		$expected = array(
-			'mk' => array('language' => 'FYRO Macedonian', 'locale' => 'mk', 'localeFallback' => 'mkd', 'charset' => 'utf-8', 'direction' => 'ltr'),
-			'mk-mk' => array('language' => 'Macedonian', 'locale' => 'mk_mk', 'localeFallback' => 'mkd', 'charset' => 'utf-8', 'direction' => 'ltr')
+			'mk' => array('language' => 'FYRO Macedonian', 'locale' => 'mk', 'localeFallback' => 'mac', 'charset' => 'utf-8', 'direction' => 'ltr'),
+			'mk-mk' => array('language' => 'Macedonian', 'locale' => 'mk_mk', 'localeFallback' => 'mac', 'charset' => 'utf-8', 'direction' => 'ltr')
 		);
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->catalog(array('ms'));
 		$expected = array(
-			'ms' => array('language' => 'Malaysian', 'locale' => 'msa', 'localeFallback' => 'msa', 'charset' => 'utf-8', 'direction' => 'ltr')
+			'ms' => array('language' => 'Malaysian', 'locale' => 'may', 'localeFallback' => 'may', 'charset' => 'utf-8', 'direction' => 'ltr')
 		);
 		$this->assertEquals($expected, $result);
 
@@ -744,22 +740,22 @@ class L10nTest extends CakeTestCase {
 
 		$result = $localize->catalog(array('n', 'nl', 'nl-be'));
 		$expected = array(
-			'n' => array('language' => 'Dutch (Standard)', 'locale' => 'nld', 'localeFallback' => 'nld', 'charset' => 'utf-8', 'direction' => 'ltr'),
-			'nl' => array('language' => 'Dutch (Standard)', 'locale' => 'nld', 'localeFallback' => 'nld', 'charset' => 'utf-8', 'direction' => 'ltr'),
-			'nl-be' => array('language' => 'Dutch (Belgium)', 'locale' => 'nl_be', 'localeFallback' => 'nld', 'charset' => 'utf-8', 'direction' => 'ltr')
+			'n' => array('language' => 'Dutch (Standard)', 'locale' => 'dut', 'localeFallback' => 'dut', 'charset' => 'utf-8', 'direction' => 'ltr'),
+			'nl' => array('language' => 'Dutch (Standard)', 'locale' => 'dut', 'localeFallback' => 'dut', 'charset' => 'utf-8', 'direction' => 'ltr'),
+			'nl-be' => array('language' => 'Dutch (Belgium)', 'locale' => 'nl_be', 'localeFallback' => 'dut', 'charset' => 'utf-8', 'direction' => 'ltr')
 		);
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->catalog('nl');
-		$expected = array('language' => 'Dutch (Standard)', 'locale' => 'nld', 'localeFallback' => 'nld', 'charset' => 'utf-8', 'direction' => 'ltr');
+		$expected = array('language' => 'Dutch (Standard)', 'locale' => 'dut', 'localeFallback' => 'dut', 'charset' => 'utf-8', 'direction' => 'ltr');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->catalog('nld');
-		$expected = array('language' => 'Dutch (Standard)', 'locale' => 'nld', 'localeFallback' => 'nld', 'charset' => 'utf-8', 'direction' => 'ltr');
+		$expected = array('language' => 'Dutch (Standard)', 'locale' => 'dut', 'localeFallback' => 'dut', 'charset' => 'utf-8', 'direction' => 'ltr');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->catalog('dut');
-		$expected = array('language' => 'Dutch (Standard)', 'locale' => 'nld', 'localeFallback' => 'nld', 'charset' => 'utf-8', 'direction' => 'ltr');
+		$expected = array('language' => 'Dutch (Standard)', 'locale' => 'dut', 'localeFallback' => 'dut', 'charset' => 'utf-8', 'direction' => 'ltr');
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->catalog(array('nb'));
@@ -797,8 +793,8 @@ class L10nTest extends CakeTestCase {
 
 		$result = $localize->catalog(array('ro', 'ro-mo'));
 		$expected = array(
-			'ro' => array('language' => 'Romanian', 'locale' => 'ron', 'localeFallback' => 'ron', 'charset' => 'utf-8', 'direction' => 'ltr'),
-			'ro-mo' => array('language' => 'Romanian (Moldavia)', 'locale' => 'ro_mo', 'localeFallback' => 'ron', 'charset' => 'utf-8', 'direction' => 'ltr')
+			'ro' => array('language' => 'Romanian', 'locale' => 'rum', 'localeFallback' => 'rum', 'charset' => 'utf-8', 'direction' => 'ltr'),
+			'ro-mo' => array('language' => 'Romanian (Moldavia)', 'locale' => 'ro_mo', 'localeFallback' => 'rum', 'charset' => 'utf-8', 'direction' => 'ltr')
 		);
 		$this->assertEquals($expected, $result);
 
@@ -810,7 +806,7 @@ class L10nTest extends CakeTestCase {
 
 		$result = $localize->catalog(array('sk'));
 		$expected = array(
-			'sk' => array('language' => 'Slovak', 'locale' => 'slk', 'localeFallback' => 'slk', 'charset' => 'utf-8', 'direction' => 'ltr')
+			'sk' => array('language' => 'Slovak', 'locale' => 'slo', 'localeFallback' => 'slo', 'charset' => 'utf-8', 'direction' => 'ltr')
 		);
 		$this->assertEquals($expected, $result);
 
@@ -822,13 +818,13 @@ class L10nTest extends CakeTestCase {
 
 		$result = $localize->catalog(array('sq'));
 		$expected = array(
-			'sq' => array('language' => 'Albanian', 'locale' => 'sqi', 'localeFallback' => 'sqi', 'charset' => 'utf-8', 'direction' => 'ltr')
+			'sq' => array('language' => 'Albanian', 'locale' => 'alb', 'localeFallback' => 'alb', 'charset' => 'utf-8', 'direction' => 'ltr')
 		);
 		$this->assertEquals($expected, $result);
 
 		$result = $localize->catalog(array('sr'));
 		$expected = array(
-			'sr' => array('language' => 'Serbian', 'locale' => 'srp', 'localeFallback' => 'srp', 'charset' => 'utf-8', 'direction' => 'ltr')
+			'sr' => array('language' => 'Serbian', 'locale' => 'scc', 'localeFallback' => 'scc', 'charset' => 'utf-8', 'direction' => 'ltr')
 		);
 		$this->assertEquals($expected, $result);
 
@@ -920,11 +916,11 @@ class L10nTest extends CakeTestCase {
 
 		$result = $localize->catalog(array('zh', 'zh-cn', 'zh-hk', 'zh-sg', 'zh-tw'));
 		$expected = array(
-			'zh' => array('language' => 'Chinese', 'locale' => 'zho', 'localeFallback' => 'zho', 'charset' => 'utf-8', 'direction' => 'ltr'),
-			'zh-cn' => array('language' => 'Chinese (PRC)', 'locale' => 'zh_cn', 'localeFallback' => 'zho', 'charset' => 'GB2312', 'direction' => 'ltr'),
-			'zh-hk' => array('language' => 'Chinese (Hong Kong)', 'locale' => 'zh_hk', 'localeFallback' => 'zho', 'charset' => 'utf-8', 'direction' => 'ltr'),
-			'zh-sg' => array('language' => 'Chinese (Singapore)', 'locale' => 'zh_sg', 'localeFallback' => 'zho', 'charset' => 'utf-8', 'direction' => 'ltr'),
-			'zh-tw' => array('language' => 'Chinese (Taiwan)', 'locale' => 'zh_tw', 'localeFallback' => 'zho', 'charset' => 'utf-8', 'direction' => 'ltr')
+			'zh' => array('language' => 'Chinese', 'locale' => 'chi', 'localeFallback' => 'chi', 'charset' => 'utf-8', 'direction' => 'ltr'),
+			'zh-cn' => array('language' => 'Chinese (PRC)', 'locale' => 'zh_cn', 'localeFallback' => 'chi', 'charset' => 'GB2312', 'direction' => 'ltr'),
+			'zh-hk' => array('language' => 'Chinese (Hong Kong)', 'locale' => 'zh_hk', 'localeFallback' => 'chi', 'charset' => 'utf-8', 'direction' => 'ltr'),
+			'zh-sg' => array('language' => 'Chinese (Singapore)', 'locale' => 'zh_sg', 'localeFallback' => 'chi', 'charset' => 'utf-8', 'direction' => 'ltr'),
+			'zh-tw' => array('language' => 'Chinese (Taiwan)', 'locale' => 'zh_tw', 'localeFallback' => 'chi', 'charset' => 'utf-8', 'direction' => 'ltr')
 		);
 		$this->assertEquals($expected, $result);
 
@@ -940,7 +936,7 @@ class L10nTest extends CakeTestCase {
 			'es-do' => array('language' => 'Spanish (Dominican Republic)', 'locale' => 'es_do', 'localeFallback' => 'spa', 'charset' => 'utf-8', 'direction' => 'ltr'),
 			'sz' => array('language' => 'Sami (Lappish)', 'locale' => 'smi', 'localeFallback' => 'smi', 'charset' => 'utf-8', 'direction' => 'ltr'),
 			'ar-lb' => array('language' => 'Arabic (Lebanon)', 'locale' => 'ar_lb', 'localeFallback' => 'ara', 'charset' => 'utf-8', 'direction' => 'rtl'),
-			'zh-hk' => array('language' => 'Chinese (Hong Kong)', 'locale' => 'zh_hk', 'localeFallback' => 'zho', 'charset' => 'utf-8', 'direction' => 'ltr'),
+			'zh-hk' => array('language' => 'Chinese (Hong Kong)', 'locale' => 'zh_hk', 'localeFallback' => 'chi', 'charset' => 'utf-8', 'direction' => 'ltr'),
 			'pt-br' => array('language' => 'Portuguese (Brazil)', 'locale' => 'pt_br', 'localeFallback' => 'por', 'charset' => 'utf-8', 'direction' => 'ltr')
 		);
 		$this->assertEquals($expected, $result);
@@ -949,8 +945,8 @@ class L10nTest extends CakeTestCase {
 		$expected = array(
 			'eng' => array('language' => 'English', 'locale' => 'eng', 'localeFallback' => 'eng', 'charset' => 'utf-8', 'direction' => 'ltr'),
 			'deu' => array('language' => 'German (Standard)', 'locale' => 'deu', 'localeFallback' => 'deu', 'charset' => 'utf-8', 'direction' => 'ltr'),
-			'zho' => array('language' => 'Chinese', 'locale' => 'zho', 'localeFallback' => 'zho', 'charset' => 'utf-8', 'direction' => 'ltr'),
-			'rum' => array('language' => 'Romanian', 'locale' => 'ron', 'localeFallback' => 'ron', 'charset' => 'utf-8', 'direction' => 'ltr'),
+			'zho' => array('language' => 'Chinese', 'locale' => 'chi', 'localeFallback' => 'chi', 'charset' => 'utf-8', 'direction' => 'ltr'),
+			'rum' => array('language' => 'Romanian', 'locale' => 'rum', 'localeFallback' => 'rum', 'charset' => 'utf-8', 'direction' => 'ltr'),
 			'zul' => array('language' => 'Zulu', 'locale' => 'zul', 'localeFallback' => 'zul', 'charset' => 'utf-8', 'direction' => 'ltr'),
 			'yid' => array('language' => 'Yiddish', 'locale' => 'yid', 'localeFallback' => 'yid', 'charset' => 'utf-8', 'direction' => 'ltr')
 		);

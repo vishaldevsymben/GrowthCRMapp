@@ -163,9 +163,9 @@ class CakeValidationRule {
  */
 	public function checkRequired($field, &$data) {
 		return (
-			(!isset($data[$field]) && $this->isRequired() === true) ||
+			(!array_key_exists($field, $data) && $this->isRequired() === true) ||
 			(
-				isset($data[$field]) && (empty($data[$field]) &&
+				array_key_exists($field, $data) && (empty($data[$field]) &&
 				!is_numeric($data[$field])) && $this->allowEmpty === false
 			)
 		);
@@ -273,7 +273,7 @@ class CakeValidationRule {
 			$this->_valid = call_user_func_array(array('Validation', $this->_rule), $this->_ruleParams);
 		} elseif (is_string($validator['rule'])) {
 			$this->_valid = preg_match($this->_rule, $data[$field]);
-		} else {
+		} elseif (Configure::read('debug') > 0) {
 			trigger_error(__d('cake_dev', 'Could not find validation handler %s for %s', $this->_rule, $field), E_USER_WARNING);
 			return false;
 		}

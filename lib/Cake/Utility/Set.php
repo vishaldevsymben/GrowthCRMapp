@@ -45,7 +45,7 @@ class Set {
  */
 	public static function merge($data, $merge = null) {
 		$args = func_get_args();
-		if (empty($args[1])) {
+		if (empty($args[1]) && count($args) <= 2) {
 			return (array)$args[0];
 		}
 		if (!is_array($args[0])) {
@@ -349,7 +349,7 @@ class Set {
 					$context = array('trace' => array(null), 'item' => $context, 'key' => $key);
 				}
 				if ($token === '..') {
-					if (count($context['trace']) === 1) {
+					if (count($context['trace']) == 1) {
 						$context['trace'][] = $context['key'];
 					}
 					$parent = implode('/', $context['trace']) . '/.';
@@ -373,7 +373,7 @@ class Set {
 					);
 				} elseif (is_array($context['item'])
 					&& array_key_exists($token, $context['item'])
-					&& !(strval($key) === strval($token) && count($tokens) === 1 && $tokens[0] === '.')) {
+					&& !(strval($key) === strval($token) && count($tokens) == 1 && $tokens[0] === '.')) {
 					$items = $context['item'][$token];
 					if (!is_array($items)) {
 						$items = array($items);
@@ -827,7 +827,7 @@ class Set {
 			}
 		}
 
-		if ($groupPath) {
+		if ($groupPath != null) {
 			$group = Set::extract($data, $groupPath);
 			if (!empty($group)) {
 				$c = count($keys);
@@ -956,6 +956,9 @@ class Set {
  * @link http://book.cakephp.org/2.0/en/core-utility-libraries/set.html#Set::sort
  */
 	public static function sort($data, $path, $dir) {
+		if (empty($data)) {
+			return $data;
+		}
 		$originalKeys = array_keys($data);
 		$numeric = false;
 		if (is_numeric(implode('', $originalKeys))) {

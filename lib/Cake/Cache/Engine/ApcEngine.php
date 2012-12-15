@@ -61,8 +61,9 @@ class ApcEngine extends CacheEngine {
  * @return boolean True if the data was successfully cached, false on failure
  */
 	public function write($key, $value, $duration) {
-		$expires = 0;
-		if ($duration) {
+		if ($duration == 0) {
+			$expires = 0;
+		} else {
 			$expires = time() + $duration;
 		}
 		apc_store($key . '_expires', $expires, $duration);

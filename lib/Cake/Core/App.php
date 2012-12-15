@@ -607,7 +607,7 @@ class App {
 			extract($parent, EXTR_OVERWRITE);
 		}
 
-		if (!$name && !$file) {
+		if ($name == null && $file == null) {
 			return false;
 		}
 

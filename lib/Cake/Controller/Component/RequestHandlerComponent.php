@@ -19,7 +19,6 @@
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
-App::uses('Component', 'Controller');
 App::uses('Xml', 'Utility');
 
 /**
@@ -90,24 +89,14 @@ class RequestHandlerComponent extends Component {
 	);
 
 /**
- * A mapping between type and viewClass
- * By default only JSON and XML are mapped, use RequestHandlerComponent::viewClassMap()
- *
- * @var array
- */
-	protected $_viewClassMap = array(
-		'json' => 'Json',
-		'xml' => 'Xml'
-	);
-
-/**
  * Constructor. Parses the accepted content types accepted by the client using HTTP_ACCEPT
  *
  * @param ComponentCollection $collection ComponentCollection object.
  * @param array $settings Array of settings.
  */
 	public function __construct(ComponentCollection $collection, $settings = array()) {
-		parent::__construct($collection, $settings + array('checkHttpCache' => true));
+		$default = array('checkHttpCache' => true);
+		parent::__construct($collection, $settings + $default);
 		$this->addInputType('xml', array(array($this, 'convertXml')));
 
 		$Controller = $collection->getController();
@@ -122,10 +111,11 @@ class RequestHandlerComponent extends Component {
  * and the requested mime-types, RequestHandler::$ext is set to that value.
  *
  * @param Controller $controller A reference to the controller
+ * @param array $settings Array of settings to _set().
  * @return void
  * @see Router::parseExtensions()
  */
-	public function initialize(Controller $controller) {
+	public function initialize(Controller $controller, $settings = array()) {
 		if (isset($this->request->params['ext'])) {
 			$this->ext = $this->request->params['ext'];
 		}
@@ -133,9 +123,7 @@ class RequestHandlerComponent extends Component {
 			$this->_setExtension();
 		}
 		$this->params = $controller->params;
-		if (!empty($this->settings['viewClassMap'])) {
-			$this->viewClassMap($this->settings['viewClassMap']);
-		}
+		$this->_set($settings);
 	}
 
 /**
@@ -157,11 +145,9 @@ class RequestHandlerComponent extends Component {
 		$extensions = Router::extensions();
 		$preferred = array_shift($accept);
 		$preferredTypes = $this->response->mapType($preferred);
-		if (!in_array('xhtml', $preferredTypes) && !in_array('html', $preferredTypes)) {
-			$similarTypes = array_intersect($extensions, $preferredTypes);
-			if (count($similarTypes) === 1) {
-				$this->ext = array_shift($similarTypes);
-			}
+		$similarTypes = array_intersect($extensions, $preferredTypes);
+		if (count($similarTypes) === 1 && !in_array('xhtml', $preferredTypes) && !in_array('html', $preferredTypes)) {
+			$this->ext = array_shift($similarTypes);
 		}
 	}
 
@@ -270,7 +256,8 @@ class RequestHandlerComponent extends Component {
  * @return boolean false if the render process should be aborted
  **/
 	public function beforeRender(Controller $controller) {
-		if ($this->settings['checkHttpCache'] && $this->response->checkNotModified($this->request)) {
+		$shouldCheck = $this->settings['checkHttpCache'];
+		if ($shouldCheck && $this->response->checkNotModified($this->request)) {
 			return false;
 		}
 	}
@@ -395,11 +382,13 @@ class RequestHandlerComponent extends Component {
  * Gets Prototype version if call is Ajax, otherwise empty string.
  * The Prototype library sets a special "Prototype version" HTTP header.
  *
- * @return string|boolean When Ajax the prototype version of component making the call otherwise false
+ * @return string Prototype version of component making Ajax call
  */
 	public function getAjaxVersion() {
-		$httpX = env('HTTP_X_PROTOTYPE_VERSION');
-		return ($httpX === null) ? false : $httpX;
+		if (env('HTTP_X_PROTOTYPE_VERSION') != null) {
+			return env('HTTP_X_PROTOTYPE_VERSION');
+		}
+		return false;
 	}
 
 /**
@@ -465,10 +454,9 @@ class RequestHandlerComponent extends Component {
 	public function accepts($type = null) {
 		$accepted = $this->request->accepts();
 
-		if (!$type) {
+		if ($type == null) {
 			return $this->mapType($accepted);
-		}
-		if (is_array($type)) {
+		} elseif (is_array($type)) {
 			foreach ($type as $t) {
 				$t = $this->mapAlias($t);
 				if (in_array($t, $accepted)) {
@@ -476,9 +464,9 @@ class RequestHandlerComponent extends Component {
 				}
 			}
 			return false;
-		}
-		if (is_string($type)) {
-			return in_array($this->mapAlias($type), $accepted);
+		} elseif (is_string($type)) {
+			$type = $this->mapAlias($type);
+			return in_array($type, $accepted);
 		}
 		return false;
 	}
@@ -495,20 +483,18 @@ class RequestHandlerComponent extends Component {
 		if (!$this->request->is('post') && !$this->request->is('put')) {
 			return null;
 		}
-		if (is_array($type)) {
+
+		list($contentType) = explode(';', env('CONTENT_TYPE'));
+		if ($type == null) {
+			return $this->mapType($contentType);
+		} elseif (is_array($type)) {
 			foreach ($type as $t) {
 				if ($this->requestedWith($t)) {
 					return $t;
 				}
 			}
 			return false;
-		}
-
-		list($contentType) = explode(';', env('CONTENT_TYPE'));
-		if (!$type) {
-			return $this->mapType($contentType);
-		}
-		if (is_string($type)) {
+		} elseif (is_string($type)) {
 			return ($type == $this->mapType($contentType));
 		}
 	}
@@ -536,9 +522,10 @@ class RequestHandlerComponent extends Component {
 		if (empty($acceptRaw)) {
 			return $this->ext;
 		}
-		$accepts = $this->mapType(array_shift($acceptRaw));
+		$accepts = array_shift($acceptRaw);
+		$accepts = $this->mapType($accepts);
 
-		if (!$type) {
+		if ($type == null) {
 			if (empty($this->ext) && !empty($accepts)) {
 				return $accepts[0];
 			}
@@ -595,27 +582,18 @@ class RequestHandlerComponent extends Component {
 		}
 		$controller->ext = '.ctp';
 
-		$pluginDot = null;
-		$viewClassMap = $this->viewClassMap();
-		if (array_key_exists($type, $viewClassMap)) {
-			list($pluginDot, $viewClass) = pluginSplit($viewClassMap[$type], true);
-		} else {
-			$viewClass = Inflector::classify($type);
-		}
+		$viewClass = Inflector::classify($type);
 		$viewName = $viewClass . 'View';
 		if (!class_exists($viewName)) {
-			App::uses($viewName, $pluginDot . 'View');
+			App::uses($viewName, 'View');
 		}
 		if (class_exists($viewName)) {
 			$controller->viewClass = $viewClass;
 		} elseif (empty($this->_renderType)) {
 			$controller->viewPath .= DS . $type;
 		} else {
-			$controller->viewPath = preg_replace(
-				"/([\/\\\\]{$this->_renderType})$/",
-				DS . $type,
-				$controller->viewPath
-			);
+			$remove = preg_replace("/([\/\\\\]{$this->_renderType})$/", DS . $type, $controller->viewPath);
+			$controller->viewPath = $remove;
 		}
 		$this->_renderType = $type;
 		$controller->layoutPath = $type;
@@ -625,8 +603,12 @@ class RequestHandlerComponent extends Component {
 		}
 
 		$helper = ucfirst($type);
+		$isAdded = (
+			in_array($helper, $controller->helpers) ||
+			array_key_exists($helper, $controller->helpers)
+		);
 
-		if (!in_array($helper, $controller->helpers) && empty($controller->helpers[$helper])) {
+		if (!$isAdded) {
 			App::uses('AppHelper', 'View/Helper');
 			App::uses($helper . 'Helper', 'View/Helper');
 			if (class_exists($helper . 'Helper')) {
@@ -652,35 +634,39 @@ class RequestHandlerComponent extends Component {
 		$defaults = array('index' => null, 'charset' => null, 'attachment' => false);
 		$options = $options + $defaults;
 
-		$cType = $type;
 		if (strpos($type, '/') === false) {
 			$cType = $this->response->getMimeType($type);
-		}
-		if (is_array($cType)) {
-			if (isset($cType[$options['index']])) {
+			if ($cType === false) {
+				return false;
+			}
+			if (is_array($cType) && isset($cType[$options['index']])) {
 				$cType = $cType[$options['index']];
 			}
-
-			if ($this->prefers($cType)) {
-				$cType = $this->prefers($cType);
-			} else {
-				$cType = $cType[0];
+			if (is_array($cType)) {
+				if ($this->prefers($cType)) {
+					$cType = $this->prefers($cType);
+				} else {
+					$cType = $cType[0];
+				}
 			}
+		} else {
+			$cType = $type;
 		}
 
-		if (!$type) {
-			return false;
+		if ($cType != null) {
+			if (empty($this->request->params['requested'])) {
+				$this->response->type($cType);
+			}
+
+			if (!empty($options['charset'])) {
+				$this->response->charset($options['charset']);
+			}
+			if (!empty($options['attachment'])) {
+				$this->response->download($options['attachment']);
+			}
+			return true;
 		}
-		if (empty($this->request->params['requested'])) {
-			$this->response->type($cType);
-		}
-		if (!empty($options['charset'])) {
-			$this->response->charset($options['charset']);
-		}
-		if (!empty($options['attachment'])) {
-			$this->response->download($options['attachment']);
-		}
-		return true;
+		return false;
 	}
 
 /**
@@ -741,27 +727,6 @@ class RequestHandlerComponent extends Component {
 			throw new CakeException(__d('cake_dev', 'You must give a handler callback.'));
 		}
 		$this->_inputTypeMap[$type] = $handler;
-	}
-
-/**
- * Getter/setter for viewClassMap
- *
- * @param array|string $type The type string or array with format `array('type' => 'viewClass')` to map one or more
- * @param array $viewClass The viewClass to be used for the type without `View` appended
- * @return array]string Returns viewClass when only string $type is set, else array with viewClassMap
- */
-	public function viewClassMap($type = null, $viewClass = null) {
-		if (!$viewClass && is_string($type) && isset($this->_viewClassMap[$type])) {
-			return $this->_viewClassMap[$type];
-		}
-		if (is_string($type)) {
-			$this->_viewClassMap[$type] = $viewClass;
-		} elseif (is_array($type)) {
-			foreach ($type as $key => $value) {
-				$this->viewClassMap($key, $value);
-			}
-		}
-		return $this->_viewClassMap;
 	}
 
 }

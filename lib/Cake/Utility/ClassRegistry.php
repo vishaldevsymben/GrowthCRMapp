@@ -94,6 +94,8 @@ class ClassRegistry {
  */
 	public static function init($class, $strict = false) {
 		$_this = ClassRegistry::getInstance();
+		$false = false;
+		$true = true;
 
 		if (is_array($class)) {
 			$objects = $class;
@@ -103,19 +105,11 @@ class ClassRegistry {
 		} else {
 			$objects = array(array('class' => $class));
 		}
-		$defaults = array();
-		if (isset($_this->_config['Model'])) {
-			$defaults = $_this->_config['Model'];
-		}
+		$defaults = isset($_this->_config['Model']) ? $_this->_config['Model'] : array();
 		$count = count($objects);
 		$availableDs = array_keys(ConnectionManager::enumConnectionObjects());
 
 		foreach ($objects as $key => $settings) {
-			if (is_numeric($settings)) {
-				trigger_error(__d('cake_dev', '(ClassRegistry::init() Attempted to create instance of a class with a numeric name'), E_USER_WARNING);
-				return false;
-			}
-
 			if (is_array($settings)) {
 				$pluginPath = null;
 				$settings = array_merge($defaults, $settings);
@@ -124,7 +118,6 @@ class ClassRegistry {
 				list($plugin, $class) = pluginSplit($class);
 				if ($plugin) {
 					$pluginPath = $plugin . '.';
-					$settings['plugin'] = $plugin;
 				}
 
 				if (empty($settings['alias'])) {
@@ -132,8 +125,7 @@ class ClassRegistry {
 				}
 				$alias = $settings['alias'];
 
-				$model = $_this->_duplicate($alias, $class);
-				if ($model) {
+				if ($model = $_this->_duplicate($alias, $class)) {
 					$_this->map($alias, $class);
 					return $model;
 				}
@@ -165,16 +157,17 @@ class ClassRegistry {
 					} else {
 						$instance = $reflection->newInstance();
 					}
-					if ($strict && !$instance instanceof Model) {
-						$instance = null;
+					if ($strict) {
+						$instance = ($instance instanceof Model) ? $instance : null;
 					}
 				}
 				if (!isset($instance)) {
-					$appModel = 'AppModel';
 					if ($strict) {
 						return false;
 					} elseif ($plugin && class_exists($plugin . 'AppModel')) {
 						$appModel = $plugin . 'AppModel';
+					} else {
+						$appModel = 'AppModel';
 					}
 					if (!empty($appModel)) {
 						$settings['name'] = $class;
@@ -182,16 +175,19 @@ class ClassRegistry {
 					}
 
 					if (!isset($instance)) {
-						trigger_error(__d('cake_dev', '(ClassRegistry::init() could not create instance of %1$s class %2$s ', $class, $type), E_USER_WARNING);
-						return false;
+						trigger_error(__d('cake_dev', '(ClassRegistry::init() could not create instance of %s', $class), E_USER_WARNING);
+						return $false;
 					}
 				}
 				$_this->map($alias, $class);
+			} elseif (is_numeric($settings)) {
+				trigger_error(__d('cake_dev', '(ClassRegistry::init() Attempted to create instance of a class with a numeric name'), E_USER_WARNING);
+				return $false;
 			}
 		}
 
 		if ($count > 1) {
-			return true;
+			return $true;
 		}
 		return $instance;
 	}
@@ -236,8 +232,12 @@ class ClassRegistry {
 	public static function isKeySet($key) {
 		$_this = ClassRegistry::getInstance();
 		$key = Inflector::underscore($key);
-
-		return isset($_this->_objects[$key]) || isset($_this->_map[$key]);
+		if (isset($_this->_objects[$key])) {
+			return true;
+		} elseif (isset($_this->_map[$key])) {
+			return true;
+		}
+		return false;
 	}
 
 /**
@@ -246,7 +246,8 @@ class ClassRegistry {
  * @return array Set of keys stored in registry
  */
 	public static function keys() {
-		return array_keys(ClassRegistry::getInstance()->_objects);
+		$_this = ClassRegistry::getInstance();
+		return array_keys($_this->_objects);
 	}
 
 /**
@@ -303,7 +304,7 @@ class ClassRegistry {
  * @param string $class
  * @return boolean
  */
-	protected function &_duplicate($alias, $class) {
+	protected function &_duplicate($alias,  $class) {
 		$duplicate = false;
 		if ($this->isKeySet($alias)) {
 			$model = $this->getObject($alias);
@@ -337,7 +338,8 @@ class ClassRegistry {
  * @return array Keys of registry's map
  */
 	public static function mapKeys() {
-		return array_keys(ClassRegistry::getInstance()->_map);
+		$_this = ClassRegistry::getInstance();
+		return array_keys($_this->_map);
 	}
 
 /**

@@ -288,6 +288,7 @@ class EmailComponent extends Component {
 	public function send($content = null, $template = null, $layout = null) {
 		$lib = new CakeEmail();
 		$lib->charset = $this->charset;
+		$lib->headerCharset = $this->charset;
 
 		$lib->from($this->_formatAddresses((array)$this->from));
 		if (!empty($this->to)) {
@@ -316,7 +317,7 @@ class EmailComponent extends Component {
 		foreach ($this->headers as $key => $value) {
 			$headers['X-' . $key] = $value;
 		}
-		if ($this->date) {
+		if ($this->date != false) {
 			$headers['Date'] = $this->date;
 		}
 		$lib->setHeaders($headers);

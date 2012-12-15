@@ -108,7 +108,6 @@ class Mysql extends DboSource {
 		'primary_key' => array('name' => 'NOT NULL AUTO_INCREMENT'),
 		'string' => array('name' => 'varchar', 'limit' => '255'),
 		'text' => array('name' => 'text'),
-		'biginteger' => array('name' => 'bigint', 'limit' => '20'),
 		'integer' => array('name' => 'int', 'limit' => '11', 'formatter' => 'intval'),
 		'float' => array('name' => 'float', 'formatter' => 'floatval'),
 		'datetime' => array('name' => 'datetime', 'format' => 'Y-m-d H:i:s', 'formatter' => 'date'),
@@ -118,13 +117,6 @@ class Mysql extends DboSource {
 		'binary' => array('name' => 'blob'),
 		'boolean' => array('name' => 'tinyint', 'limit' => '1')
 	);
-
-/**
- * Mapping of collation names to character set names
- *
- * @var array
- */
-	protected $_charsets = array();
 
 /**
  * Connects to the database using options in the given configuration array.
@@ -163,7 +155,6 @@ class Mysql extends DboSource {
 			));
 		}
 
-		$this->_charsets = array();
 		$this->_useAlias = (bool)version_compare($this->getVersion(), "4.1", ">=");
 
 		return $this->connected;
@@ -186,7 +177,7 @@ class Mysql extends DboSource {
  */
 	public function listSources($data = null) {
 		$cache = parent::listSources();
-		if ($cache) {
+		if ($cache != null) {
 			return $cache;
 		}
 		$result = $this->_execute('SHOW TABLES FROM ' . $this->name($this->config['database']));
@@ -270,24 +261,15 @@ class Mysql extends DboSource {
  * @return string Character set name
  */
 	public function getCharsetName($name) {
-		if ((bool)version_compare($this->getVersion(), "5", "<")) {
-			return false;
-		}
-		if (isset($this->_charsets[$name])) {
-			return $this->_charsets[$name];
-		}
-		$r = $this->_execute(
-			'SELECT CHARACTER_SET_NAME FROM INFORMATION_SCHEMA.COLLATIONS WHERE COLLATION_NAME = ?',
-			array($name)
-		);
-		$cols = $r->fetch(PDO::FETCH_ASSOC);
+		if ((bool)version_compare($this->getVersion(), "5", ">=")) {
+			$r = $this->_execute('SELECT CHARACTER_SET_NAME FROM INFORMATION_SCHEMA.COLLATIONS WHERE COLLATION_NAME = ?', array($name));
+			$cols = $r->fetch(PDO::FETCH_ASSOC);
 
-		if (isset($cols['CHARACTER_SET_NAME'])) {
-			$this->_charsets[$name] = $cols['CHARACTER_SET_NAME'];
-		} else {
-			$this->_charsets[$name] = false;
+			if (isset($cols['CHARACTER_SET_NAME'])) {
+				return $cols['CHARACTER_SET_NAME'];
+			}
 		}
-		return $this->_charsets[$name];
+		return false;
 	}
 
 /**
@@ -300,7 +282,7 @@ class Mysql extends DboSource {
 	public function describe($model) {
 		$key = $this->fullTableName($model, false);
 		$cache = parent::describe($key);
-		if ($cache) {
+		if ($cache != null) {
 			return $cache;
 		}
 		$table = $this->fullTableName($model);
@@ -352,7 +334,7 @@ class Mysql extends DboSource {
 			return parent::update($model, $fields, $values, $conditions);
 		}
 
-		if (!$values) {
+		if ($values == null) {
 			$combined = $fields;
 		} else {
 			$combined = array_combine($fields, $values);
@@ -443,22 +425,17 @@ class Mysql extends DboSource {
 		$table = $this->fullTableName($model);
 		$old = version_compare($this->getVersion(), '4.1', '<=');
 		if ($table) {
-			$indexes = $this->_execute('SHOW INDEX FROM ' . $table);
+			$indices = $this->_execute('SHOW INDEX FROM ' . $table);
 			// @codingStandardsIgnoreStart
 			// MySQL columns don't match the cakephp conventions.
-			while ($idx = $indexes->fetch(PDO::FETCH_OBJ)) {
+			while ($idx = $indices->fetch(PDO::FETCH_OBJ)) {
 				if ($old) {
 					$idx = (object)current((array)$idx);
 				}
 				if (!isset($index[$idx->Key_name]['column'])) {
 					$col = array();
 					$index[$idx->Key_name]['column'] = $idx->Column_name;
-
-					if ($idx->Index_type === 'FULLTEXT') {
-						$index[$idx->Key_name]['type'] = strtolower($idx->Index_type);
-					} else {
-						$index[$idx->Key_name]['unique'] = intval($idx->Non_unique == 0);
-					}
+					$index[$idx->Key_name]['unique'] = intval($idx->Non_unique == 0);
 				} else {
 					if (!empty($index[$idx->Key_name]['column']) && !is_array($index[$idx->Key_name]['column'])) {
 						$col[] = $index[$idx->Key_name]['column'];
@@ -468,7 +445,7 @@ class Mysql extends DboSource {
 				}
 			}
 			// @codingStandardsIgnoreEnd
-			$indexes->closeCursor();
+			$indices->closeCursor();
 		}
 		return $index;
 	}
@@ -578,18 +555,31 @@ class Mysql extends DboSource {
 		if (isset($indexes['drop'])) {
 			foreach ($indexes['drop'] as $name => $value) {
 				$out = 'DROP ';
-				if ($name === 'PRIMARY') {
+				if ($name == 'PRIMARY') {
 					$out .= 'PRIMARY KEY';
 				} else {
-					$out .= 'KEY ' . $this->startQuote . $name . $this->endQuote;
+					$out .= 'KEY ' . $name;
 				}
 				$alter[] = $out;
 			}
 		}
 		if (isset($indexes['add'])) {
-			$add = $this->buildIndex($indexes['add']);
-			foreach ($add as $index) {
-				$alter[] = 'ADD ' . $index;
+			foreach ($indexes['add'] as $name => $value) {
+				$out = 'ADD ';
+				if ($name == 'PRIMARY') {
+					$out .= 'PRIMARY ';
+					$name = null;
+				} else {
+					if (!empty($value['unique'])) {
+						$out .= 'UNIQUE ';
+					}
+				}
+				if (is_array($value['column'])) {
+					$out .= 'KEY ' . $name . ' (' . implode(', ', array_map(array(&$this, 'name'), $value['column'])) . ')';
+				} else {
+					$out .= 'KEY ' . $name . ' (' . $this->name($value['column']) . ')';
+				}
+				$alter[] = $out;
 			}
 		}
 		return $alter;
@@ -655,11 +645,8 @@ class Mysql extends DboSource {
 		if (in_array($col, array('date', 'time', 'datetime', 'timestamp'))) {
 			return $col;
 		}
-		if (($col === 'tinyint' && $limit === 1) || $col === 'boolean') {
+		if (($col === 'tinyint' && $limit == 1) || $col === 'boolean') {
 			return 'boolean';
-		}
-		if (strpos($col, 'bigint') !== false || $col === 'bigint') {
-			return 'biginteger';
 		}
 		if (strpos($col, 'int') !== false) {
 			return 'integer';

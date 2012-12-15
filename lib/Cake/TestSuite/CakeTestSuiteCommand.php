@@ -73,7 +73,7 @@ class CakeTestSuiteCommand extends PHPUnit_TextUI_Command {
 			);
 		}
 
-		if (!count($suite)) {
+		if (count($suite) == 0) {
 			$skeleton = new PHPUnit_Util_Skeleton_Test(
 				$suite->getName(),
 				$this->arguments['testFile']
@@ -82,7 +82,9 @@ class CakeTestSuiteCommand extends PHPUnit_TextUI_Command {
 			$result = $skeleton->generate(true);
 
 			if (!$result['incomplete']) {
+				//@codingStandardsIgnoreStart
 				eval(str_replace(array('<?php', '?>'), '', $result['code']));
+				//@codingStandardsIgnoreEnd
 				$suite = new PHPUnit_Framework_TestSuite(
 					$this->arguments['test'] . 'Test'
 				);

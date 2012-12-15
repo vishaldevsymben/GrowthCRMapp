@@ -714,6 +714,25 @@ class ModelValidationTest extends BaseModelTest {
 	}
 
 /**
+ * Test that missing validation methods does not trigger errors in production mode.
+ *
+ * @return void
+ */
+	public function testMissingValidationErrorNoTriggering() {
+		Configure::write('debug', 0);
+		$TestModel = new ValidationTest1();
+		$TestModel->create(array('title' => 'foo'));
+		$TestModel->validate = array(
+			'title' => array(
+				'rule' => array('thisOneBringsThePain'),
+				'required' => true
+			)
+		);
+		$TestModel->invalidFields(array('fieldList' => array('title')));
+		$this->assertEquals(array(), $TestModel->validationErrors);
+	}
+
+/**
  * Test placeholder replacement when validation message is an array
  *
  * @return void
@@ -2206,6 +2225,126 @@ class ModelValidationTest extends BaseModelTest {
 
 		$model->set(array('title' => ''));
 		$this->assertFalse($model->validates());
+	}
+
+/**
+ * Test validateAssociated with atomic=false & deep=true
+ *
+ * @return void
+ */
+	public function testValidateAssociatedAtomicFalseDeepTrueWithErrors() {
+		$this->loadFixtures('Comment', 'Article', 'User', 'Attachment');
+		$Attachment = ClassRegistry::init('Attachment');
+		$Attachment->Comment->validator()->add('comment', array(
+			array('rule' => 'notEmpty')
+		));
+		$Attachment->Comment->User->bindModel(array(
+			'hasMany' => array(
+				'Article',
+				'Comment'
+			)),
+			false
+		);
+
+		$data = array(
+			'Attachment' => array(
+				'attachment' => 'text',
+				'Comment' => array(
+					'comment' => '',
+					'published' => 'N',
+					'User' => array(
+						'user' => 'Foo',
+						'password' => 'mypassword',
+						'Comment' => array(
+							array(
+								'comment' => ''
+							)
+						)
+					)
+				)
+			)
+		);
+		$result = $Attachment->validateAssociated($data, array('atomic' => false, 'deep' => true));
+
+		$result = $Attachment->validationErrors;
+		$expected = array(
+			'Comment' => array(
+				'comment' => array(
+					0 => 'This field cannot be left blank',
+				),
+				'User' => array(
+					'Comment' => array(
+						0 => array(
+							'comment' => array(
+								0 => 'This field cannot be left blank',
+							),
+						),
+					),
+				),
+			),
+		);
+		$this->assertEquals($result, $expected);
+	}
+
+/**
+ * Test validateMany with atomic=false & deep=true
+ *
+ * @return void
+ */
+	public function testValidateManyAtomicFalseDeepTrueWithErrors() {
+		$this->loadFixtures('Comment', 'Article', 'User');
+		$Article = ClassRegistry::init('Article');
+		$Article->Comment->validator()->add('comment', array(
+			array('rule' => 'notEmpty')
+		));
+
+		$data = array(
+			array(
+				'Article' => array(
+					'user_id' => 1,
+					'title' => 'Foo',
+					'body' => 'text',
+					'published' => 'N'
+				),
+				'Comment' => array(
+					array(
+						'user_id' => 1,
+						'comment' => 'Baz',
+						'published' => 'N',
+					)
+				),
+			),
+			array(
+				'Article' => array(
+					'user_id' => 1,
+					'title' => 'Bar',
+					'body' => 'text',
+					'published' => 'N'
+				),
+				'Comment' => array(
+					array(
+						'user_id' => 1,
+						'comment' => '',
+						'published' => 'N',
+					)
+				),
+			),
+		);
+		$Article->validateMany($data, array('atomic' => false, 'deep' => true));
+
+		$result = $Article->validationErrors;
+		$expected = array(
+			1 => array(
+				'Comment' => array(
+					0 => array(
+						'comment' => array(
+							0 => 'This field cannot be left blank',
+						),
+					),
+				),
+			),
+		);
+		$this->assertEquals($result, $expected);
 	}
 
 }

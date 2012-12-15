@@ -30,8 +30,6 @@
 	define('MONTH', 2592000);
 	define('YEAR', 31536000);
 
-if (!function_exists('config')) {
-
 /**
  * Loads configuration files. Receives a set of configuration files
  * to load.
@@ -42,22 +40,23 @@ if (!function_exists('config')) {
  * @return boolean Success
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#config
  */
-	function config() {
-		$args = func_get_args();
-		$count = count($args);
-		$included = 0;
-		foreach ($args as $arg) {
-			if (file_exists(APP . 'Config' . DS . $arg . '.php')) {
-				include_once APP . 'Config' . DS . $arg . '.php';
-				$included++;
+function config() {
+	$args = func_get_args();
+	foreach ($args as $arg) {
+		if (file_exists(APP . 'Config' . DS . $arg . '.php')) {
+			include_once APP . 'Config' . DS . $arg . '.php';
+
+			if (count($args) == 1) {
+				return true;
+			}
+		} else {
+			if (count($args) == 1) {
+				return false;
 			}
 		}
-		return $included === $count;
 	}
-
+	return true;
 }
-
-if (!function_exists('debug')) {
 
 /**
  * Prints out debug information about given variable.
@@ -70,18 +69,18 @@ if (!function_exists('debug')) {
  * @link http://book.cakephp.org/2.0/en/development/debugging.html#basic-debugging
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#debug
  */
-	function debug($var, $showHtml = null, $showFrom = true) {
-		if (Configure::read('debug') > 0) {
-			App::uses('Debugger', 'Utility');
-			$file = '';
-			$line = '';
-			$lineInfo = '';
-			if ($showFrom) {
-				$trace = Debugger::trace(array('start' => 1, 'depth' => 2, 'format' => 'array'));
-				$file = str_replace(array(CAKE_CORE_INCLUDE_PATH, ROOT), '', $trace[0]['file']);
-				$line = $trace[0]['line'];
-			}
-			$html = <<<HTML
+function debug($var = false, $showHtml = null, $showFrom = true) {
+	if (Configure::read('debug') > 0) {
+		App::uses('Debugger', 'Utility');
+		$file = '';
+		$line = '';
+		$lineInfo = '';
+		if ($showFrom) {
+			$trace = Debugger::trace(array('start' => 1, 'depth' => 2, 'format' => 'array'));
+			$file = str_replace(array(CAKE_CORE_INCLUDE_PATH, ROOT), '', $trace[0]['file']);
+			$line = $trace[0]['line'];
+		}
+		$html = <<<HTML
 <div class="cake-debug-output">
 %s
 <pre class="cake-debug">
@@ -89,34 +88,32 @@ if (!function_exists('debug')) {
 </pre>
 </div>
 HTML;
-			$text = <<<TEXT
+		$text = <<<TEXT
 %s
 ########## DEBUG ##########
 %s
 ###########################
 TEXT;
-			$template = $html;
-			if (php_sapi_name() == 'cli' || $showHtml === false) {
-				$template = $text;
-				if ($showFrom) {
-					$lineInfo = sprintf('%s (line %s)', $file, $line);
-				}
+		$template = $html;
+		if (php_sapi_name() == 'cli' || $showHtml === false) {
+			$template = $text;
+			if ($showFrom) {
+				$lineInfo = sprintf('%s (line %s)', $file, $line);
 			}
-			if ($showHtml === null && $template !== $text) {
-				$showHtml = true;
-			}
-			$var = Debugger::exportVar($var, 25);
-			if ($showHtml) {
-				$template = $html;
-				$var = h($var);
-				if ($showFrom) {
-					$lineInfo = sprintf('<span><strong>%s</strong> (line <strong>%s</strong>)</span>', $file, $line);
-				}
-			}
-			printf($template, $lineInfo, $var);
 		}
+		if ($showHtml === null && $template !== $text) {
+			$showHtml = true;
+		}
+		$var = Debugger::exportVar($var, 25);
+		if ($showHtml) {
+			$template = $html;
+			$var = h($var);
+			if ($showFrom) {
+				$lineInfo = sprintf('<span><strong>%s</strong> (line <strong>%s</strong>)</span>', $file, $line);
+			}
+		}
+		printf($template, $lineInfo, $var);
 	}
-
 }
 
 if (!function_exists('sortByKey')) {
@@ -154,8 +151,6 @@ if (!function_exists('sortByKey')) {
 
 }
 
-if (!function_exists('h')) {
-
 /**
  * Convenience method for htmlspecialchars.
  *
@@ -167,39 +162,35 @@ if (!function_exists('h')) {
  * @return string Wrapped text
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#h
  */
-	function h($text, $double = true, $charset = null) {
-		if (is_array($text)) {
-			$texts = array();
-			foreach ($text as $k => $t) {
-				$texts[$k] = h($t, $double, $charset);
-			}
-			return $texts;
-		} elseif (is_object($text)) {
-			if (method_exists($text, '__toString')) {
-				$text = (string)$text;
-			} else {
-				$text = '(object)' . get_class($text);
-			}
-		} elseif (is_bool($text)) {
-			return $text;
+function h($text, $double = true, $charset = null) {
+	if (is_array($text)) {
+		$texts = array();
+		foreach ($text as $k => $t) {
+			$texts[$k] = h($t, $double, $charset);
 		}
-
-		static $defaultCharset = false;
-		if ($defaultCharset === false) {
-			$defaultCharset = Configure::read('App.encoding');
-			if ($defaultCharset === null) {
-				$defaultCharset = 'UTF-8';
-			}
+		return $texts;
+	} elseif (is_object($text)) {
+		if (method_exists($text, '__toString')) {
+			$text = (string)$text;
+		} else {
+			$text = '(object)' . get_class($text);
 		}
-		if (is_string($double)) {
-			$charset = $double;
-		}
-		return htmlspecialchars($text, ENT_QUOTES, ($charset) ? $charset : $defaultCharset, $double);
+	} elseif (is_bool($text)) {
+		return $text;
 	}
 
+	static $defaultCharset = false;
+	if ($defaultCharset === false) {
+		$defaultCharset = Configure::read('App.encoding');
+		if ($defaultCharset === null) {
+			$defaultCharset = 'UTF-8';
+		}
+	}
+	if (is_string($double)) {
+		$charset = $double;
+	}
+	return htmlspecialchars($text, ENT_QUOTES, ($charset) ? $charset : $defaultCharset, $double);
 }
-
-if (!function_exists('pluginSplit')) {
 
 /**
  * Splits a dot syntax plugin name into its plugin and classname.
@@ -213,20 +204,16 @@ if (!function_exists('pluginSplit')) {
  * @return array Array with 2 indexes.  0 => plugin name, 1 => classname
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#pluginSplit
  */
-	function pluginSplit($name, $dotAppend = false, $plugin = null) {
-		if (strpos($name, '.') !== false) {
-			$parts = explode('.', $name, 2);
-			if ($dotAppend) {
-				$parts[0] .= '.';
-			}
-			return $parts;
+function pluginSplit($name, $dotAppend = false, $plugin = null) {
+	if (strpos($name, '.') !== false) {
+		$parts = explode('.', $name, 2);
+		if ($dotAppend) {
+			$parts[0] .= '.';
 		}
-		return array($plugin, $name);
+		return $parts;
 	}
-
+	return array($plugin, $name);
 }
-
-if (!function_exists('pr')) {
 
 /**
  * Print_r convenience function, which prints out <PRE> tags around
@@ -236,17 +223,13 @@ if (!function_exists('pr')) {
  * @param array $var Variable to print out
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#pr
  */
-	function pr($var) {
-		if (Configure::read('debug') > 0) {
-			echo '<pre>';
-			print_r($var);
-			echo '</pre>';
-		}
+function pr($var) {
+	if (Configure::read('debug') > 0) {
+		echo '<pre>';
+		print_r($var);
+		echo '</pre>';
 	}
-
 }
-
-if (!function_exists('am')) {
 
 /**
  * Merge a group of arrays
@@ -258,21 +241,17 @@ if (!function_exists('am')) {
  * @return array All array parameters merged into one
  * @link http://book.cakephp.org/2.0/en/development/debugging.html#am
  */
-	function am() {
-		$r = array();
-		$args = func_get_args();
-		foreach ($args as $a) {
-			if (!is_array($a)) {
-				$a = array($a);
-			}
-			$r = array_merge($r, $a);
+function am() {
+	$r = array();
+	$args = func_get_args();
+	foreach ($args as $a) {
+		if (!is_array($a)) {
+			$a = array($a);
 		}
-		return $r;
+		$r = array_merge($r, $a);
 	}
-
+	return $r;
 }
-
-if (!function_exists('env')) {
 
 /**
  * Gets an environment variable from available sources, and provides emulation
@@ -284,108 +263,100 @@ if (!function_exists('env')) {
  * @return string Environment variable setting.
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#env
  */
-	function env($key) {
-		if ($key === 'HTTPS') {
-			if (isset($_SERVER['HTTPS'])) {
-				return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
-			}
-			return (strpos(env('SCRIPT_URI'), 'https://') === 0);
+function env($key) {
+	if ($key === 'HTTPS') {
+		if (isset($_SERVER['HTTPS'])) {
+			return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
 		}
-
-		if ($key === 'SCRIPT_NAME') {
-			if (env('CGI_MODE') && isset($_ENV['SCRIPT_URL'])) {
-				$key = 'SCRIPT_URL';
-			}
-		}
-
-		$val = null;
-		if (isset($_SERVER[$key])) {
-			$val = $_SERVER[$key];
-		} elseif (isset($_ENV[$key])) {
-			$val = $_ENV[$key];
-		} elseif (getenv($key) !== false) {
-			$val = getenv($key);
-		}
-
-		if ($key === 'REMOTE_ADDR' && $val === env('SERVER_ADDR')) {
-			$addr = env('HTTP_PC_REMOTE_ADDR');
-			if ($addr !== null) {
-				$val = $addr;
-			}
-		}
-
-		if ($val !== null) {
-			return $val;
-		}
-
-		switch ($key) {
-			case 'SCRIPT_FILENAME':
-				if (defined('SERVER_IIS') && SERVER_IIS === true) {
-					return str_replace('\\\\', '\\', env('PATH_TRANSLATED'));
-				}
-				break;
-			case 'DOCUMENT_ROOT':
-				$name = env('SCRIPT_NAME');
-				$filename = env('SCRIPT_FILENAME');
-				$offset = 0;
-				if (!strpos($name, '.php')) {
-					$offset = 4;
-				}
-				return substr($filename, 0, -(strlen($name) + $offset));
-				break;
-			case 'PHP_SELF':
-				return str_replace(env('DOCUMENT_ROOT'), '', env('SCRIPT_FILENAME'));
-				break;
-			case 'CGI_MODE':
-				return (PHP_SAPI === 'cgi');
-				break;
-			case 'HTTP_BASE':
-				$host = env('HTTP_HOST');
-				$parts = explode('.', $host);
-				$count = count($parts);
-
-				if ($count === 1) {
-					return '.' . $host;
-				} elseif ($count === 2) {
-					return '.' . $host;
-				} elseif ($count === 3) {
-					$gTLD = array(
-						'aero',
-						'asia',
-						'biz',
-						'cat',
-						'com',
-						'coop',
-						'edu',
-						'gov',
-						'info',
-						'int',
-						'jobs',
-						'mil',
-						'mobi',
-						'museum',
-						'name',
-						'net',
-						'org',
-						'pro',
-						'tel',
-						'travel',
-						'xxx'
-					);
-					if (in_array($parts[1], $gTLD)) {
-						return '.' . $host;
-					}
-				}
-				array_shift($parts);
-				return '.' . implode('.', $parts);
-				break;
-		}
-		return null;
+		return (strpos(env('SCRIPT_URI'), 'https://') === 0);
 	}
 
-}
+	if ($key === 'SCRIPT_NAME') {
+		if (env('CGI_MODE') && isset($_ENV['SCRIPT_URL'])) {
+			$key = 'SCRIPT_URL';
+		}
+	}
 
-if (!function_exists('cache')) {
+	$val = null;
+	if (isset($_SERVER[$key])) {
+		$val = $_SERVER[$key];
+	} elseif (isset($_ENV[$key])) {
+		$val = $_ENV[$key];
+	} elseif (getenv($key) !== false) {
+		$val = getenv($key);
+	}
+
+	if ($key === 'REMOTE_ADDR' && $val === env('SERVER_ADDR')) {
+		$addr = env('HTTP_PC_REMOTE_ADDR');
+		if ($addr !== null) {
+			$val = $addr;
+		}
+	}
+
+	if ($val !== null) {
+		return $val;
+	}
+
+	switch ($key) {
+		case 'SCRIPT_FILENAME':
+			if (defined('SERVER_IIS') && SERVER_IIS === true) {
+				return str_replace('\\\\', '\\', env('PATH_TRANSLATED'));
+			}
+			break;
+		case 'DOCUMENT_ROOT':
+			$name = env('SCRIPT_NAME');
+			$filename = env('SCRIPT_FILENAME');
+			$offset = 0;
+			if (!strpos($name, '.php')) {
+				$offset = 4;
+			}
+			return substr($filename, 0, -(strlen($name) + $offset));
+		case 'PHP_SELF':
+			return str_replace(env('DOCUMENT_ROOT'), '', env('SCRIPT_FILENAME'));
+		case 'CGI_MODE':
+			return (PHP_SAPI === 'cgi');
+		case 'HTTP_BASE':
+			$host = env('HTTP_HOST');
+			$parts = explode('.', $host);
+			$count = count($parts);
+
+			if ($count === 1) {
+				return '.' . $host;
+			} elseif ($count === 2) {
+				return '.' . $host;
+			} elseif ($count === 3) {
+				$gTLD = array(
+					'aero',
+					'asia',
+					'biz',
+					'cat',
+					'com',
+					'coop',
+					'edu',
+					'gov',
+					'info',
+					'int',
+					'jobs',
+					'mil',
+					'mobi',
+					'museum',
+					'name',
+					'net',
+					'org',
+					'pro',
+					'tel',
+					'travel',
+					'xxx'
+				);
+				if (in_array($parts[1], $gTLD)) {
+					return '.' . $host;
+				}
+			}
+			array_shift($parts);
+			return '.' . implode('.', $parts);
+	}
+	return null;
+}
 
 /**
  * Reads/writes temporary data to cache files or session.
@@ -397,51 +368,55 @@ if (!function_exists('cache')) {
  * @return mixed  The contents of the temporary file.
  * @deprecated Please use Cache::write() instead
  */
-	function cache($path, $data = null, $expires = '+1 day', $target = 'cache') {
-		if (Configure::read('Cache.disable')) {
-			return null;
-		}
-		$now = time();
+function cache($path, $data = null, $expires = '+1 day', $target = 'cache') {
+	if (Configure::read('Cache.disable')) {
+		return null;
+	}
+	$now = time();
 
-		if (!is_numeric($expires)) {
-			$expires = strtotime($expires, $now);
-		}
-
-		switch (strtolower($target)) {
-			case 'cache':
-				$filename = CACHE . $path;
-			break;
-			case 'public':
-				$filename = WWW_ROOT . $path;
-			break;
-			case 'tmp':
-				$filename = TMP . $path;
-			break;
-		}
-		$timediff = $expires - $now;
-		$filetime = false;
-
-		if (file_exists($filename)) {
-			$filetime = @filemtime($filename);
-		}
-
-		if ($data === null) {
-			if (file_exists($filename) && $filetime !== false) {
-				if ($filetime + $timediff < $now) {
-					@unlink($filename);
-				} else {
-					$data = @file_get_contents($filename);
-				}
-			}
-		} elseif (is_writable(dirname($filename))) {
-			@file_put_contents($filename, $data, LOCK_EX);
-		}
-		return $data;
+	if (!is_numeric($expires)) {
+		$expires = strtotime($expires, $now);
 	}
 
-}
+	switch (strtolower($target)) {
+		case 'cache':
+			$filename = CACHE . $path;
+		break;
+		case 'public':
+			$filename = WWW_ROOT . $path;
+		break;
+		case 'tmp':
+			$filename = TMP . $path;
+		break;
+	}
+	$timediff = $expires - $now;
+	$filetime = false;
 
-if (!function_exists('clearCache')) {
+	if (file_exists($filename)) {
+		//@codingStandardsIgnoreStart
+		$filetime = @filemtime($filename);
+		//@codingStandardsIgnoreEnd
+	}
+
+	if ($data === null) {
+		if (file_exists($filename) && $filetime !== false) {
+			if ($filetime + $timediff < $now) {
+				//@codingStandardsIgnoreStart
+				@unlink($filename);
+				//@codingStandardsIgnoreEnd
+			} else {
+				//@codingStandardsIgnoreStart
+				$data = @file_get_contents($filename);
+				//@codingStandardsIgnoreEnd
+			}
+		}
+	} elseif (is_writable(dirname($filename))) {
+		//@codingStandardsIgnoreStart
+		@file_put_contents($filename, $data, LOCK_EX);
+		//@codingStandardsIgnoreEnd
+	}
+	return $data;
+}
 
 /**
  * Used to delete files in the cache directories, or clear contents of cache directories
@@ -453,61 +428,63 @@ if (!function_exists('clearCache')) {
  * @param string $ext The file extension you are deleting
  * @return true if files found and deleted false otherwise
  */
-	function clearCache($params = null, $type = 'views', $ext = '.php') {
-		if (is_string($params) || $params === null) {
-			$params = preg_replace('/\/\//', '/', $params);
-			$cache = CACHE . $type . DS . $params;
+function clearCache($params = null, $type = 'views', $ext = '.php') {
+	if (is_string($params) || $params === null) {
+		$params = preg_replace('/\/\//', '/', $params);
+		$cache = CACHE . $type . DS . $params;
 
-			if (is_file($cache . $ext)) {
-				@unlink($cache . $ext);
-				return true;
-			} elseif (is_dir($cache)) {
-				$files = glob($cache . '*');
+		if (is_file($cache . $ext)) {
+			//@codingStandardsIgnoreStart
+			@unlink($cache . $ext);
+			//@codingStandardsIgnoreEnd
+			return true;
+		} elseif (is_dir($cache)) {
+			$files = glob($cache . '*');
 
-				if ($files === false) {
-					return false;
-				}
-
-				foreach ($files as $file) {
-					if (is_file($file) && strrpos($file, DS . 'empty') !== strlen($file) - 6) {
-						@unlink($file);
-					}
-				}
-				return true;
-			} else {
-				$cache = array(
-					CACHE . $type . DS . '*' . $params . $ext,
-					CACHE . $type . DS . '*' . $params . '_*' . $ext
-				);
-				$files = array();
-				while ($search = array_shift($cache)) {
-					$results = glob($search);
-					if ($results !== false) {
-						$files = array_merge($files, $results);
-					}
-				}
-				if (empty($files)) {
-					return false;
-				}
-				foreach ($files as $file) {
-					if (is_file($file) && strrpos($file, DS . 'empty') !== strlen($file) - 6) {
-						@unlink($file);
-					}
-				}
-				return true;
+			if ($files === false) {
+				return false;
 			}
-		} elseif (is_array($params)) {
-			foreach ($params as $file) {
-				clearCache($file, $type, $ext);
+
+			foreach ($files as $file) {
+				if (is_file($file) && strrpos($file, DS . 'empty') !== strlen($file) - 6) {
+					//@codingStandardsIgnoreStart
+					@unlink($file);
+					//@codingStandardsIgnoreEnd
+				}
+			}
+			return true;
+		} else {
+			$cache = array(
+				CACHE . $type . DS . '*' . $params . $ext,
+				CACHE . $type . DS . '*' . $params . '_*' . $ext
+			);
+			$files = array();
+			while ($search = array_shift($cache)) {
+				$results = glob($search);
+				if ($results !== false) {
+					$files = array_merge($files, $results);
+				}
+			}
+			if (empty($files)) {
+				return false;
+			}
+			foreach ($files as $file) {
+				if (is_file($file) && strrpos($file, DS . 'empty') !== strlen($file) - 6) {
+					//@codingStandardsIgnoreStart
+					@unlink($file);
+					//@codingStandardsIgnoreEnd
+				}
 			}
 			return true;
 		}
-		return false;
+	} elseif (is_array($params)) {
+		foreach ($params as $file) {
+			clearCache($file, $type, $ext);
+		}
+		return true;
 	}
-
+	return false;
 }
-
-if (!function_exists('stripslashes_deep')) {
 
 /**
  * Recursively strips slashes from all values in an array
@@ -516,20 +493,16 @@ if (!function_exists('stripslashes_deep')) {
  * @return mixed What is returned from calling stripslashes
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#stripslashes_deep
  */
-	function stripslashes_deep($values) {
-		if (is_array($values)) {
-			foreach ($values as $key => $value) {
-				$values[$key] = stripslashes_deep($value);
-			}
-		} else {
-			$values = stripslashes($values);
+function stripslashes_deep($values) {
+	if (is_array($values)) {
+		foreach ($values as $key => $value) {
+			$values[$key] = stripslashes_deep($value);
 		}
-		return $values;
+	} else {
+		$values = stripslashes($values);
 	}
-
+	return $values;
 }
-
-if (!function_exists('__')) {
 
 /**
  * Returns a translated string if one is found; Otherwise, the submitted message.
@@ -539,24 +512,20 @@ if (!function_exists('__')) {
  * @return mixed translated string
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#__
  */
-	function __($singular, $args = null) {
-		if (!$singular) {
-			return;
-		}
-
-		App::uses('I18n', 'I18n');
-		$translated = I18n::translate($singular);
-		if ($args === null) {
-			return $translated;
-		} elseif (!is_array($args)) {
-			$args = array_slice(func_get_args(), 1);
-		}
-		return vsprintf($translated, $args);
+function __($singular, $args = null) {
+	if (!$singular) {
+		return;
 	}
 
+	App::uses('I18n', 'I18n');
+	$translated = I18n::translate($singular);
+	if ($args === null) {
+		return $translated;
+	} elseif (!is_array($args)) {
+		$args = array_slice(func_get_args(), 1);
+	}
+	return vsprintf($translated, $args);
 }
-
-if (!function_exists('__n')) {
 
 /**
  * Returns correct plural form of message identified by $singular and $plural for count $count.
@@ -569,24 +538,20 @@ if (!function_exists('__n')) {
  * @return mixed plural form of translated string
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#__n
  */
-	function __n($singular, $plural, $count, $args = null) {
-		if (!$singular) {
-			return;
-		}
-
-		App::uses('I18n', 'I18n');
-		$translated = I18n::translate($singular, $plural, null, 6, $count);
-		if ($args === null) {
-			return $translated;
-		} elseif (!is_array($args)) {
-			$args = array_slice(func_get_args(), 3);
-		}
-		return vsprintf($translated, $args);
+function __n($singular, $plural, $count, $args = null) {
+	if (!$singular) {
+		return;
 	}
 
+	App::uses('I18n', 'I18n');
+	$translated = I18n::translate($singular, $plural, null, 6, $count);
+	if ($args === null) {
+		return $translated;
+	} elseif (!is_array($args)) {
+		$args = array_slice(func_get_args(), 3);
+	}
+	return vsprintf($translated, $args);
 }
-
-if (!function_exists('__d')) {
 
 /**
  * Allows you to override the current domain for a single message lookup.
@@ -597,23 +562,19 @@ if (!function_exists('__d')) {
  * @return translated string
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#__d
  */
-	function __d($domain, $msg, $args = null) {
-		if (!$msg) {
-			return;
-		}
-		App::uses('I18n', 'I18n');
-		$translated = I18n::translate($msg, null, $domain);
-		if ($args === null) {
-			return $translated;
-		} elseif (!is_array($args)) {
-			$args = array_slice(func_get_args(), 2);
-		}
-		return vsprintf($translated, $args);
+function __d($domain, $msg, $args = null) {
+	if (!$msg) {
+		return;
 	}
-
+	App::uses('I18n', 'I18n');
+	$translated = I18n::translate($msg, null, $domain);
+	if ($args === null) {
+		return $translated;
+	} elseif (!is_array($args)) {
+		$args = array_slice(func_get_args(), 2);
+	}
+	return vsprintf($translated, $args);
 }
-
-if (!function_exists('__dn')) {
 
 /**
  * Allows you to override the current domain for a single plural message lookup.
@@ -628,23 +589,19 @@ if (!function_exists('__dn')) {
  * @return plural form of translated string
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#__dn
  */
-	function __dn($domain, $singular, $plural, $count, $args = null) {
-		if (!$singular) {
-			return;
-		}
-		App::uses('I18n', 'I18n');
-		$translated = I18n::translate($singular, $plural, $domain, 6, $count);
-		if ($args === null) {
-			return $translated;
-		} elseif (!is_array($args)) {
-			$args = array_slice(func_get_args(), 4);
-		}
-		return vsprintf($translated, $args);
+function __dn($domain, $singular, $plural, $count, $args = null) {
+	if (!$singular) {
+		return;
 	}
-
+	App::uses('I18n', 'I18n');
+	$translated = I18n::translate($singular, $plural, $domain, 6, $count);
+	if ($args === null) {
+		return $translated;
+	} elseif (!is_array($args)) {
+		$args = array_slice(func_get_args(), 4);
+	}
+	return vsprintf($translated, $args);
 }
-
-if (!function_exists('__dc')) {
 
 /**
  * Allows you to override the current domain for a single message lookup.
@@ -670,23 +627,19 @@ if (!function_exists('__dc')) {
  * @return translated string
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#__dc
  */
-	function __dc($domain, $msg, $category, $args = null) {
-		if (!$msg) {
-			return;
-		}
-		App::uses('I18n', 'I18n');
-		$translated = I18n::translate($msg, null, $domain, $category);
-		if ($args === null) {
-			return $translated;
-		} elseif (!is_array($args)) {
-			$args = array_slice(func_get_args(), 3);
-		}
-		return vsprintf($translated, $args);
+function __dc($domain, $msg, $category, $args = null) {
+	if (!$msg) {
+		return;
 	}
-
+	App::uses('I18n', 'I18n');
+	$translated = I18n::translate($msg, null, $domain, $category);
+	if ($args === null) {
+		return $translated;
+	} elseif (!is_array($args)) {
+		$args = array_slice(func_get_args(), 3);
+	}
+	return vsprintf($translated, $args);
 }
-
-if (!function_exists('__dcn')) {
 
 /**
  * Allows you to override the current domain for a single plural message lookup.
@@ -716,23 +669,19 @@ if (!function_exists('__dcn')) {
  * @return plural form of translated string
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#__dcn
  */
-	function __dcn($domain, $singular, $plural, $count, $category, $args = null) {
-		if (!$singular) {
-			return;
-		}
-		App::uses('I18n', 'I18n');
-		$translated = I18n::translate($singular, $plural, $domain, $category, $count);
-		if ($args === null) {
-			return $translated;
-		} elseif (!is_array($args)) {
-			$args = array_slice(func_get_args(), 5);
-		}
-		return vsprintf($translated, $args);
+function __dcn($domain, $singular, $plural, $count, $category, $args = null) {
+	if (!$singular) {
+		return;
 	}
-
+	App::uses('I18n', 'I18n');
+	$translated = I18n::translate($singular, $plural, $domain, $category, $count);
+	if ($args === null) {
+		return $translated;
+	} elseif (!is_array($args)) {
+		$args = array_slice(func_get_args(), 5);
+	}
+	return vsprintf($translated, $args);
 }
-
-if (!function_exists('__c')) {
 
 /**
  * The category argument allows a specific category of the locale settings to be used for fetching a message.
@@ -754,23 +703,19 @@ if (!function_exists('__c')) {
  * @return translated string
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#__c
  */
-	function __c($msg, $category, $args = null) {
-		if (!$msg) {
-			return;
-		}
-		App::uses('I18n', 'I18n');
-		$translated = I18n::translate($msg, null, null, $category);
-		if ($args === null) {
-			return $translated;
-		} elseif (!is_array($args)) {
-			$args = array_slice(func_get_args(), 2);
-		}
-		return vsprintf($translated, $args);
+function __c($msg, $category, $args = null) {
+	if (!$msg) {
+		return;
 	}
-
+	App::uses('I18n', 'I18n');
+	$translated = I18n::translate($msg, null, null, $category);
+	if ($args === null) {
+		return $translated;
+	} elseif (!is_array($args)) {
+		$args = array_slice(func_get_args(), 2);
+	}
+	return vsprintf($translated, $args);
 }
-
-if (!function_exists('LogError')) {
 
 /**
  * Shortcut to Log::write.
@@ -779,16 +724,12 @@ if (!function_exists('LogError')) {
  * @return void
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#LogError
  */
-	function LogError($message) {
-		App::uses('CakeLog', 'Log');
-		$bad = array("\n", "\r", "\t");
-		$good = ' ';
-		CakeLog::write('error', str_replace($bad, $good, $message));
-	}
-
+function LogError($message) {
+	App::uses('CakeLog', 'Log');
+	$bad = array("\n", "\r", "\t");
+	$good = ' ';
+	CakeLog::write('error', str_replace($bad, $good, $message));
 }
-
-if (!function_exists('fileExistsInPath')) {
 
 /**
  * Searches include path for files.
@@ -797,23 +738,19 @@ if (!function_exists('fileExistsInPath')) {
  * @return Full path to file if exists, otherwise false
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#fileExistsInPath
  */
-	function fileExistsInPath($file) {
-		$paths = explode(PATH_SEPARATOR, ini_get('include_path'));
-		foreach ($paths as $path) {
-			$fullPath = $path . DS . $file;
+function fileExistsInPath($file) {
+	$paths = explode(PATH_SEPARATOR, ini_get('include_path'));
+	foreach ($paths as $path) {
+		$fullPath = $path . DS . $file;
 
-			if (file_exists($fullPath)) {
-				return $fullPath;
-			} elseif (file_exists($file)) {
-				return $file;
-			}
+		if (file_exists($fullPath)) {
+			return $fullPath;
+		} elseif (file_exists($file)) {
+			return $file;
 		}
-		return false;
 	}
-
+	return false;
 }
-
-if (!function_exists('convertSlash')) {
 
 /**
  * Convert forward slashes to underscores and removes first and last underscores in a string
@@ -822,11 +759,9 @@ if (!function_exists('convertSlash')) {
  * @return string with underscore remove from start and end of string
  * @link http://book.cakephp.org/2.0/en/core-libraries/global-constants-and-functions.html#convertSlash
  */
-	function convertSlash($string) {
-		$string = trim($string, '/');
-		$string = preg_replace('/\/\//', '/', $string);
-		$string = str_replace('/', '_', $string);
-		return $string;
-	}
-
+function convertSlash($string) {
+	$string = trim($string, '/');
+	$string = preg_replace('/\/\//', '/', $string);
+	$string = str_replace('/', '_', $string);
+	return $string;
 }

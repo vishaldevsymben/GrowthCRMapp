@@ -598,7 +598,7 @@ class AclShell extends AppShell {
  * @return array Variables
  */
 	protected function _dataVars($type = null) {
-		if (!$type) {
+		if ($type == null) {
 			$type = $this->args[0];
 		}
 		$vars = array();

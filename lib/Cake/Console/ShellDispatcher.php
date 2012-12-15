@@ -276,11 +276,7 @@ class ShellDispatcher {
 		if (isset($params['working'])) {
 			$params['working'] = trim($params['working']);
 		}
-
-		if (!empty($params['working']) && (!isset($this->args[0]) || isset($this->args[0]) && $this->args[0][0] !== '.')) {
-			if ($params['working'][0] === '.') {
-				$params['working'] = realpath($params['working']);
-			}
+		if (!empty($params['working']) && (!isset($this->args[0]) || isset($this->args[0]) && $this->args[0]{0} !== '.')) {
 			if (empty($this->params['app']) && $params['working'] != $params['root']) {
 				$params['root'] = dirname($params['working']);
 				$params['app'] = basename($params['working']);

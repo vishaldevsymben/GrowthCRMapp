@@ -78,7 +78,6 @@ class HtmlHelper extends AppHelper {
 		'block' => '<div%s>%s</div>',
 		'blockstart' => '<div%s>',
 		'blockend' => '</div>',
-		'hiddenblock' => '<div style="display:none;">%s</div>',
 		'tag' => '<%s%s>%s</%s>',
 		'tagstart' => '<%s%s>',
 		'tagend' => '</%s>',
@@ -160,7 +159,7 @@ class HtmlHelper extends AppHelper {
 		if (is_object($this->_View->response)) {
 			$this->response = $this->_View->response;
 		} else {
-			$this->response = new CakeResponse();
+			$this->response = new CakeResponse(array('charset' => Configure::read('App.encoding')));
 		}
 		if (!empty($settings['configFile'])) {
 			$this->loadConfig($settings['configFile']);
@@ -359,7 +358,7 @@ class HtmlHelper extends AppHelper {
 			$confirmMessage = str_replace("'", "\'", $confirmMessage);
 			$confirmMessage = str_replace('"', '\"', $confirmMessage);
 			$options['onclick'] = "return confirm('{$confirmMessage}');";
-		} elseif (isset($options['default']) && !$options['default']) {
+		} elseif (isset($options['default']) && $options['default'] == false) {
 			if (isset($options['onclick'])) {
 				$options['onclick'] .= ' event.returnValue = false; return false;';
 			} else {
@@ -441,7 +440,7 @@ class HtmlHelper extends AppHelper {
 		if ($rel == 'import') {
 			$out = sprintf($this->_tags['style'], $this->_parseAttributes($options, array('inline', 'block'), '', ' '), '@import url(' . $url . ');');
 		} else {
-			if (!$rel) {
+			if ($rel == null) {
 				$rel = 'stylesheet';
 			}
 			$out = sprintf($this->_tags['css'], $rel, $url, $this->_parseAttributes($options, array('inline', 'block'), '', ' '));
@@ -558,7 +557,7 @@ class HtmlHelper extends AppHelper {
 	public function scriptBlock($script, $options = array()) {
 		$options += array('safe' => true, 'inline' => true);
 		if ($options['safe']) {
-			$script = "\n" . '//<![CDATA[' . "\n" . $script . "\n" . '//]]>' . "\n";
+			$script  = "\n" . '//<![CDATA[' . "\n" . $script . "\n" . '//]]>' . "\n";
 		}
 		if (!$options['inline'] && empty($options['block'])) {
 			$options['block'] = 'script';
@@ -637,7 +636,7 @@ class HtmlHelper extends AppHelper {
 			$out[] = $key . ':' . $value . ';';
 		}
 		if ($oneline) {
-			return implode(' ', $out);
+			return join(' ', $out);
 		}
 		return implode("\n", $out);
 	}
@@ -669,7 +668,7 @@ class HtmlHelper extends AppHelper {
 					$out[] = $crumb[0];
 				}
 			}
-			return implode($separator, $out);
+			return join($separator, $out);
 		} else {
 			return null;
 		}
@@ -701,7 +700,7 @@ class HtmlHelper extends AppHelper {
 				} else {
 					$elementContent = $this->link($crumb[0], $crumb[1], $crumb[2]);
 				}
-				if (!$which) {
+				if ($which == 0) {
 					$options['class'] = 'first';
 				} elseif ($which == $crumbCount - 1) {
 					$options['class'] = 'last';
@@ -805,7 +804,7 @@ class HtmlHelper extends AppHelper {
 				$out[] = sprintf($this->_tags['tableheader'], $this->_parseAttributes(current($arg)), key($arg));
 			}
 		}
-		return sprintf($this->_tags['tablerow'], $this->_parseAttributes($trOptions), implode(' ', $out));
+		return sprintf($this->_tags['tablerow'], $this->_parseAttributes($trOptions), join(' ', $out));
 	}
 
 /**
@@ -951,12 +950,13 @@ class HtmlHelper extends AppHelper {
 		if (isset($options['escape'])) {
 			$text = h($text);
 		}
-		if ($class && !empty($class)) {
+		if ($class != null && !empty($class)) {
 			$options['class'] = $class;
 		}
-		$tag = 'para';
 		if ($text === null) {
 			$tag = 'parastart';
+		} else {
+			$tag = 'para';
 		}
 		return sprintf($this->_tags[$tag], $this->_parseAttributes($options, null, ' ', ''), $text);
 	}
@@ -1115,9 +1115,9 @@ class HtmlHelper extends AppHelper {
 			if (is_array($item)) {
 				$item = $key . $this->nestedList($item, $options, $itemOptions, $tag);
 			}
-			if (isset($itemOptions['even']) && $index % 2 === 0) {
+			if (isset($itemOptions['even']) && $index % 2 == 0) {
 				$itemOptions['class'] = $itemOptions['even'];
-			} elseif (isset($itemOptions['odd']) && $index % 2 !== 0) {
+			} elseif (isset($itemOptions['odd']) && $index % 2 != 0) {
 				$itemOptions['class'] = $itemOptions['odd'];
 			}
 			$out .= sprintf($this->_tags['li'], $this->_parseAttributes($itemOptions, array('even', 'odd'), ' ', ''), $item);

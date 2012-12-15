@@ -600,7 +600,7 @@ class DboSource extends DataSource {
 		} else {
 			if (isset($args[1]) && $args[1] === true) {
 				return $this->fetchAll($args[0], true);
-			} elseif (isset($args[1]) && !is_array($args[1])) {
+			} elseif (isset($args[1]) && !is_array($args[1]) ) {
 				return $this->fetchAll($args[0], false);
 			} elseif (isset($args[1]) && is_array($args[1])) {
 				if (isset($args[2])) {
@@ -671,7 +671,7 @@ class DboSource extends DataSource {
 
 			if ($this->hasResult()) {
 				$first = $this->fetchRow();
-				if ($first) {
+				if ($first != null) {
 					$out[] = $first;
 				}
 				while ($item = $this->fetchResult()) {
@@ -984,7 +984,7 @@ class DboSource extends DataSource {
 	public function create(Model $model, $fields = null, $values = null) {
 		$id = null;
 
-		if (!$fields) {
+		if ($fields == null) {
 			unset($fields, $values);
 			$fields = array_keys($model->data);
 			$values = array_values($model->data);
@@ -1054,7 +1054,7 @@ class DboSource extends DataSource {
 
 		if ($model->recursive == -1) {
 			$_associations = array();
-		} elseif ($model->recursive === 0) {
+		} elseif ($model->recursive == 0) {
 			unset($_associations[2], $_associations[3]);
 		}
 
@@ -1408,9 +1408,10 @@ class DboSource extends DataSource {
 					}
 				}
 				if (!isset($data[$association])) {
-					$data[$association] = array();
-					if ($merge[0][$association]) {
+					if ($merge[0][$association] != null) {
 						$data[$association] = $merge[0][$association];
+					} else {
+						$data[$association] = array();
 					}
 				} else {
 					if (is_array($merge[0][$association])) {
@@ -1766,7 +1767,7 @@ class DboSource extends DataSource {
 			case 'schema':
 				foreach (array('columns', 'indexes', 'tableParameters') as $var) {
 					if (is_array(${$var})) {
-						${$var} = "\t" . implode(",\n\t", array_filter(${$var}));
+						${$var} = "\t" . join(",\n\t", array_filter(${$var}));
 					} else {
 						${$var} = '';
 					}
@@ -1820,7 +1821,7 @@ class DboSource extends DataSource {
  * @return boolean Success
  */
 	public function update(Model $model, $fields = array(), $values = null, $conditions = null) {
-		if (!$values) {
+		if ($values == null) {
 			$combined = $fields;
 		} else {
 			$combined = array_combine($fields, $values);
@@ -2281,7 +2282,8 @@ class DboSource extends DataSource {
 			$virtualFields,
 			$fields,
 			$quote,
-			ConnectionManager::getSourceName($this)
+			ConnectionManager::getSourceName($this),
+			$model->table
 		);
 		$cacheKey = md5(serialize($cacheKey));
 		if ($return = $this->cacheMethod(__FUNCTION__, $cacheKey)) {
@@ -2463,6 +2465,10 @@ class DboSource extends DataSource {
 					$not = 'NOT ';
 				}
 
+				if (empty($value)) {
+					continue;
+				}
+
 				if (empty($value[1])) {
 					if ($not) {
 						$out[] = $not . '(' . $value[0] . ')';
@@ -2489,16 +2495,16 @@ class DboSource extends DataSource {
 						$count = count($value);
 						if ($count === 1 && !preg_match("/\s+NOT$/", $key)) {
 							$data = $this->_quoteFields($key) . ' = (';
-						} else {
-							$data = $this->_quoteFields($key) . ' IN (';
-						}
-						if ($quoteValues) {
-							if (is_object($model)) {
-								$columnType = $model->getColumnType($key);
+							if ($quoteValues) {
+								if (is_object($model)) {
+									$columnType = $model->getColumnType($key);
+								}
+								$data .= implode(', ', $this->value($value, $columnType));
 							}
-							$data .= implode(', ', $this->value($value, $columnType));
+							$data .= ')';
+						} else {
+							$data = $this->_parseKey($model, $key, $value);
 						}
-						$data .= ')';
 					} else {
 						$ret = $this->conditionKeysToString($value, $quoteValues, $model);
 						if (count($ret) > 1) {
@@ -2513,7 +2519,7 @@ class DboSource extends DataSource {
 					$data = $this->_parseKey($model, trim($key), $value);
 				}
 
-				if ($data) {
+				if ($data != null) {
 					$out[] = $data;
 					$data = null;
 				}
@@ -2916,21 +2922,12 @@ class DboSource extends DataSource {
 			}
 			$statement->execute();
 			$statement->closeCursor();
+
+			if ($this->fullDebug) {
+				$this->logQuery($sql, $value);
+			}
 		}
 		return $this->commit();
-	}
-
-/**
- * Reset a sequence based on the MAX() value of $column.  Useful
- * for resetting sequences after using insertMulti().
- *
- * This method should be implemented by datasources that require sequences to be used.
- *
- * @param string $table The name of the table to update.
- * @param string $column The column to use when reseting the sequence value.
- * @return boolean success.
- */
-	public function resetSequence($table, $column) {
 	}
 
 /**
@@ -3079,7 +3076,7 @@ class DboSource extends DataSource {
 		}
 		$out = $this->_buildFieldParameters($out, $column, 'beforeDefault');
 
-		if (isset($column['key']) && $column['key'] === 'primary' && ($type === 'integer' || $type === 'biginteger')) {
+		if (isset($column['key']) && $column['key'] === 'primary' && $type === 'integer') {
 			$out .= ' ' . $this->columns['primary_key']['name'];
 		} elseif (isset($column['key']) && $column['key'] === 'primary') {
 			$out .= ' NOT NULL';
@@ -3125,7 +3122,7 @@ class DboSource extends DataSource {
 	}
 
 /**
- * Format indexes for create table.
+ * Format indexes for create table
  *
  * @param array $indexes
  * @param string $table
@@ -3141,8 +3138,6 @@ class DboSource extends DataSource {
 			} else {
 				if (!empty($value['unique'])) {
 					$out .= 'UNIQUE ';
-				} elseif (!empty($value['type']) && strtoupper($value['type']) === 'FULLTEXT') {
-					$out .= 'FULLTEXT ';
 				}
 				$name = $this->startQuote . $name . $this->endQuote;
 			}

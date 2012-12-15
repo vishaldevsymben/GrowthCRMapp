@@ -42,6 +42,8 @@ class AssetDispatcher extends DispatcherFilter {
  */
 	public function beforeDispatch($event) {
 		$url = $event->data['request']->url;
+		$response = $event->data['response'];
+
 		if (strpos($url, '..') !== false || strpos($url, '.') === false) {
 			return;
 		}
@@ -51,27 +53,43 @@ class AssetDispatcher extends DispatcherFilter {
 			return $result;
 		}
 
-		$assetFile = $this->_getAssetFile($url);
-		if ($assetFile === null || !file_exists($assetFile)) {
-			return null;
-		}
-
-		$response = $event->data['response'];
-		$event->stopPropagation();
-
-		$response->modified(filemtime($assetFile));
-		if ($response->checkNotModified($event->data['request'])) {
-			return $response;
-		}
-
 		$pathSegments = explode('.', $url);
 		$ext = array_pop($pathSegments);
-		$this->_deliverAsset($response, $assetFile, $ext);
-		return $response;
+		$parts = explode('/', $url);
+		$assetFile = null;
+
+		if ($parts[0] === 'theme') {
+			$themeName = $parts[1];
+			unset($parts[0], $parts[1]);
+			$fileFragment = urldecode(implode(DS, $parts));
+			$path = App::themePath($themeName) . 'webroot' . DS;
+			if (file_exists($path . $fileFragment)) {
+				$assetFile = $path . $fileFragment;
+			}
+		} else {
+			$plugin = Inflector::camelize($parts[0]);
+			if (CakePlugin::loaded($plugin)) {
+				unset($parts[0]);
+				$fileFragment = urldecode(implode(DS, $parts));
+				$pluginWebroot = CakePlugin::path($plugin) . 'webroot' . DS;
+				if (file_exists($pluginWebroot . $fileFragment)) {
+					$assetFile = $pluginWebroot . $fileFragment;
+				}
+			}
+		}
+
+		if ($assetFile !== null) {
+			$event->stopPropagation();
+			$response->modified(filemtime($assetFile));
+			if (!$response->checkNotModified($event->data['request'])) {
+				$this->_deliverAsset($response, $assetFile, $ext);
+			}
+			return $response;
+		}
 	}
 
 /**
- * Checks if the client is requesting a filtered asset and runs the corresponding
+ * Checks if the client is requeting a filtered asset and runs the corresponding
  * filter if any is configured
  *
  * @param CakeEvent $event containing the request and response object
@@ -93,41 +111,12 @@ class AssetDispatcher extends DispatcherFilter {
 		if (($isCss && empty($filters['css'])) || ($isJs && empty($filters['js']))) {
 			$response->statusCode(404);
 			return $response;
-		}
-
-		if ($isCss) {
+		} elseif ($isCss) {
 			include WWW_ROOT . DS . $filters['css'];
 			return $response;
-		}
-
-		if ($isJs) {
+		} elseif ($isJs) {
 			include WWW_ROOT . DS . $filters['js'];
 			return $response;
-		}
-	}
-
-/**
- * Builds asset file path based off url
- *
- * @param string $url
- * @return string Absolute path for asset file
- */
-	protected function _getAssetFile($url) {
-		$parts = explode('/', $url);
-		if ($parts[0] === 'theme') {
-			$themeName = $parts[1];
-			unset($parts[0], $parts[1]);
-			$fileFragment = urldecode(implode(DS, $parts));
-			$path = App::themePath($themeName) . 'webroot' . DS;
-			return $path . $fileFragment;
-		}
-
-		$plugin = Inflector::camelize($parts[0]);
-		if (CakePlugin::loaded($plugin)) {
-			unset($parts[0]);
-			$fileFragment = urldecode(implode(DS, $parts));
-			$pluginWebroot = CakePlugin::path($plugin) . 'webroot' . DS;
-			return $pluginWebroot . $fileFragment;
 		}
 	}
 

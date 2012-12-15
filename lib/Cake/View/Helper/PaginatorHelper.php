@@ -526,7 +526,12 @@ class PaginatorHelper extends AppHelper {
  */
 	protected function _hasPage($model, $page) {
 		$params = $this->params($model);
-		return !empty($params) && $params[$page . 'Page'];
+		if (!empty($params)) {
+			if ($params["{$page}Page"] == true) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 /**
@@ -536,7 +541,7 @@ class PaginatorHelper extends AppHelper {
  * @link http://book.cakephp.org/2.0/en/core-libraries/helpers/paginator.html#PaginatorHelper::defaultModel
  */
 	public function defaultModel() {
-		if ($this->_defaultModel) {
+		if ($this->_defaultModel != null) {
 			return $this->_defaultModel;
 		}
 		if (empty($this->request->params['paging'])) {
@@ -578,7 +583,7 @@ class PaginatorHelper extends AppHelper {
 		$options);
 
 		$paging = $this->params($options['model']);
-		if (!$paging['pageCount']) {
+		if ($paging['pageCount'] == 0) {
 			$paging['pageCount'] = 1;
 		}
 		$start = 0;
@@ -645,7 +650,6 @@ class PaginatorHelper extends AppHelper {
  * - `ellipsis` Ellipsis content, defaults to '...'
  * - `class` Class for wrapper tag
  * - `currentClass` Class for wrapper tag on current active page, defaults to 'current'
- * - `currentTag` Tag to use for current page number, defaults to null
  *
  * @param array $options Options for the numbers, (before, after, model, modulus, separator)
  * @return string numbers string.
@@ -660,8 +664,7 @@ class PaginatorHelper extends AppHelper {
 
 		$defaults = array(
 			'tag' => 'span', 'before' => null, 'after' => null, 'model' => $this->defaultModel(), 'class' => null,
-			'modulus' => '8', 'separator' => ' | ', 'first' => null, 'last' => null, 'ellipsis' => '...',
-			'currentClass' => 'current', 'currentTag' => null
+			'modulus' => '8', 'separator' => ' | ', 'first' => null, 'last' => null, 'ellipsis' => '...', 'currentClass' => 'current'
 		);
 		$options += $defaults;
 
@@ -675,7 +678,7 @@ class PaginatorHelper extends AppHelper {
 		extract($options);
 		unset($options['tag'], $options['before'], $options['after'], $options['model'],
 			$options['modulus'], $options['separator'], $options['first'], $options['last'],
-			$options['ellipsis'], $options['class'], $options['currentClass'], $options['currentTag']
+			$options['ellipsis'], $options['class'], $options['currentClass']
 		);
 
 		$out = '';
@@ -711,11 +714,7 @@ class PaginatorHelper extends AppHelper {
 			if ($class) {
 				$currentClass .= ' ' . $class;
 			}
-			if ($currentTag) {
-				$out .= $this->Html->tag($tag, $this->Html->tag($currentTag, $params['page']), array('class' => $currentClass));
-			} else {
-				$out .= $this->Html->tag($tag, $params['page'], array('class' => $currentClass));
-			}
+			$out .= $this->Html->tag($tag, $params['page'], array('class' => $currentClass));
 			if ($i != $params['pageCount']) {
 				$out .= $separator;
 			}
@@ -748,11 +747,7 @@ class PaginatorHelper extends AppHelper {
 					if ($class) {
 						$currentClass .= ' ' . $class;
 					}
-					if ($currentTag) {
-						$out .= $this->Html->tag($tag, $this->Html->tag($currentTag, $i), array('class' => $currentClass));
-					} else {
-						$out .= $this->Html->tag($tag, $i, array('class' => $currentClass));
-					}
+					$out .= $this->Html->tag($tag, $i, array('class' => $currentClass));
 				} else {
 					$out .= $this->Html->tag($tag, $this->link($i, array('page' => $i), $options), compact('class'));
 				}

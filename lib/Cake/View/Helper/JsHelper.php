@@ -338,7 +338,7 @@ class JsHelper extends AppHelper {
 		} else {
 			$data = array($one => $two);
 		}
-		if (!$data) {
+		if ($data == null) {
 			return false;
 		}
 		$this->_jsVars = array_merge($this->_jsVars, $data);

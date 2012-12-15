@@ -103,7 +103,7 @@ abstract class ObjectCollection {
 			if (empty($event->omitSubject)) {
 				$subject = $event->subject();
 			}
-			//TODO: Temporary BC check, while we move all the triggers system into the CakeEventManager
+
 			foreach (array('break', 'breakOn', 'collectReturn', 'modParams') as $opt) {
 				if (isset($event->{$opt})) {
 					$options[$opt] = $event->{$opt};
@@ -126,7 +126,6 @@ abstract class ObjectCollection {
 		if ($options['modParams'] !== false && !isset($params[$options['modParams']])) {
 			throw new CakeException(__d('cake_dev', 'Cannot use modParams with indexes that do not exist.'));
 		}
-		$result = null;
 		foreach ($list as $name) {
 			$result = call_user_func_array(array($this->_loaded[$name], $callback), compact('subject') + $params);
 			if ($options['collectReturn'] === true) {
@@ -181,10 +180,7 @@ abstract class ObjectCollection {
 		$enabled = false;
 		foreach ((array)$name as $object) {
 			if (isset($this->_loaded[$object]) && !isset($this->_enabled[$object])) {
-				$priority = $this->defaultPriority;
-				if (isset($this->_loaded[$object]->settings['priority'])) {
-					$priority = $this->_loaded[$object]->settings['priority'];
-				}
+				$priority = isset($this->_loaded[$object]->settings['priority']) ? $this->_loaded[$object]->settings['priority'] : $this->defaultPriority;
 				$this->_enabled[$object] = array($priority);
 				$enabled = true;
 			}
@@ -222,14 +218,14 @@ abstract class ObjectCollection {
 		if (is_string($name)) {
 			$name = array($name => $priority);
 		}
-		foreach ($name as $object => $objectPriority) {
-			if (isset($this->_loaded[$object])) {
-				if (is_null($objectPriority)) {
-					$objectPriority = $this->defaultPriority;
+		foreach ($name as $obj => $prio) {
+			if (isset($this->_loaded[$obj])) {
+				if (is_null($prio)) {
+					$prio = $this->defaultPriority;
 				}
-				$this->_loaded[$object]->settings['priority'] = $objectPriority;
-				if (isset($this->_enabled[$object])) {
-					$this->_enabled[$object] = array($objectPriority);
+				$this->_loaded[$obj]->settings['priority'] = $prio;
+				if (isset($this->_enabled[$obj])) {
+					$this->_enabled[$obj] = array($prio);
 				}
 			}
 		}
@@ -286,8 +282,9 @@ abstract class ObjectCollection {
  * @return void
  */
 	public function unload($name) {
-		list(, $name) = pluginSplit($name);
-		unset($this->_loaded[$name], $this->_enabled[$name]);
+		list($plugin, $name) = pluginSplit($name);
+		unset($this->_loaded[$name]);
+		unset($this->_enabled[$name]);
 	}
 
 /**
@@ -299,7 +296,7 @@ abstract class ObjectCollection {
  */
 	public function set($name = null, $object = null) {
 		if (!empty($name) && !empty($object)) {
-			list(, $name) = pluginSplit($name);
+			list($plugin, $name) = pluginSplit($name);
 			$this->_loaded[$name] = $object;
 		}
 		return $this->_loaded;
@@ -320,7 +317,7 @@ abstract class ObjectCollection {
 				$options = (array)$objectName;
 				$objectName = $i;
 			}
-			list(, $name) = pluginSplit($objectName);
+			list($plugin, $name) = pluginSplit($objectName);
 			$normal[$name] = array('class' => $objectName, 'settings' => $options);
 		}
 		return $normal;

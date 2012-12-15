@@ -236,13 +236,6 @@ class Model extends Object implements CakeEventListener {
 	public $tablePrefix = null;
 
 /**
- * Plugin model belongs to.
- *
- * @var string
- */
-	public $plugin = null;
-
-/**
  * Name of the model.
  *
  * @var string
@@ -565,6 +558,8 @@ class Model extends Object implements CakeEventListener {
  */
 	protected $_associations = array('belongsTo', 'hasOne', 'hasMany', 'hasAndBelongsToMany');
 
+// @codingStandardsIgnoreStart
+
 /**
  * Holds model associations temporarily to allow for dynamic (un)binding.
  *
@@ -592,6 +587,8 @@ class Model extends Object implements CakeEventListener {
  * @var array
  */
 	public $__backContainableAssociation = array();
+
+// @codingStandardsIgnoreEnd
 
 /**
  * The ID of the model record that was last inserted.
@@ -672,14 +669,10 @@ class Model extends Object implements CakeEventListener {
 			extract(array_merge(
 				array(
 					'id' => $this->id, 'table' => $this->useTable, 'ds' => $this->useDbConfig,
-					'name' => $this->name, 'alias' => $this->alias, 'plugin' => $this->plugin
+					'name' => $this->name, 'alias' => $this->alias
 				),
 				$id
 			));
-		}
-
-		if ($this->plugin === null) {
-			$this->plugin = (isset($plugin) ? $plugin : $this->plugin);
 		}
 
 		if ($this->name === null) {
@@ -727,7 +720,7 @@ class Model extends Object implements CakeEventListener {
 				$this->useTable = Inflector::tableize($this->name);
 			}
 
-			if (!$this->displayField) {
+			if ($this->displayField == null) {
 				unset($this->displayField);
 			}
 			$this->table = $this->useTable;
@@ -1400,7 +1393,7 @@ class Model extends Object implements CakeEventListener {
 			$this->schema();
 		}
 
-		if ($this->_schema) {
+		if ($this->_schema != null) {
 			return isset($this->_schema[$name]);
 		}
 		return false;
@@ -1454,7 +1447,7 @@ class Model extends Object implements CakeEventListener {
  *    or false if none $field exist.
  */
 	public function getVirtualField($field = null) {
-		if (!$field) {
+		if ($field == null) {
 			return empty($this->virtualFields) ? false : $this->virtualFields;
 		}
 		if ($this->isVirtualField($field)) {
@@ -1510,7 +1503,7 @@ class Model extends Object implements CakeEventListener {
 	public function read($fields = null, $id = null) {
 		$this->validationErrors = array();
 
-		if ($id) {
+		if ($id != null) {
 			$this->id = $id;
 		}
 
@@ -1526,8 +1519,9 @@ class Model extends Object implements CakeEventListener {
 				'fields' => $fields
 			));
 			return $this->data;
+		} else {
+			return false;
 		}
-		return false;
 	}
 
 /**
@@ -1880,7 +1874,7 @@ class Model extends Object implements CakeEventListener {
 					if ($keepExisting && !empty($links)) {
 						foreach ($links as $link) {
 							$oldJoin = $link[$join][$this->hasAndBelongsToMany[$assoc]['associationForeignKey']];
-							if (!in_array($oldJoin, $newJoins)) {
+							if (! in_array($oldJoin, $newJoins) ) {
 								$conditions[$associationForeignKey] = $oldJoin;
 								$db->delete($this->{$join}, $conditions);
 							} else {
@@ -2572,7 +2566,7 @@ class Model extends Object implements CakeEventListener {
  * @return boolean True if such a record exists
  */
 	public function hasAny($conditions = null) {
-		return (bool)$this->find('count', array('conditions' => $conditions, 'recursive' => -1));
+		return ($this->find('count', array('conditions' => $conditions, 'recursive' => -1)) != false);
 	}
 
 /**
@@ -2737,7 +2731,7 @@ class Model extends Object implements CakeEventListener {
  */
 	protected function _findCount($state, $query, $results = array()) {
 		if ($state === 'before') {
-			if (!empty($query['type']) && isset($this->findMethods[$query['type']]) && $query['type'] !== 'count') {
+			if (!empty($query['type']) && isset($this->findMethods[$query['type']]) && $query['type'] !== 'count' ) {
 				$query['operation'] = 'count';
 				$query = $this->{'_find' . ucfirst($query['type'])}('before', $query);
 			}
@@ -2993,7 +2987,7 @@ class Model extends Object implements CakeEventListener {
 		if (!empty($this->id)) {
 			$fields[$this->alias . '.' . $this->primaryKey . ' !='] = $this->id;
 		}
-		return !$this->find('count', array('conditions' => $fields, 'recursive' => -1));
+		return ($this->find('count', array('conditions' => $fields, 'recursive' => -1)) == 0);
 	}
 
 /**
@@ -3164,7 +3158,7 @@ class Model extends Object implements CakeEventListener {
 	public function setDataSource($dataSource = null) {
 		$oldConfig = $this->useDbConfig;
 
-		if ($dataSource) {
+		if ($dataSource != null) {
 			$this->useDbConfig = $dataSource;
 		}
 		$db = ConnectionManager::getDataSource($this->useDbConfig);
@@ -3210,7 +3204,7 @@ class Model extends Object implements CakeEventListener {
  * @return array Associations
  */
 	public function getAssociated($type = null) {
-		if (!$type) {
+		if ($type == null) {
 			$associated = array();
 			foreach ($this->_associations as $assoc) {
 				if (!empty($this->{$assoc})) {

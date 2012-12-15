@@ -494,7 +494,7 @@ abstract class JsBaseEngineHelper extends AppHelper {
 			$out[] = $key . ':' . $value;
 		}
 		sort($out);
-		return implode(', ', $out);
+		return join(', ', $out);
 	}
 
 /**

@@ -146,7 +146,7 @@ class FormHelper extends AppHelper {
 			));
 		} elseif (ClassRegistry::isKeySet($this->defaultModel)) {
 			$defaultObject = ClassRegistry::getObject($this->defaultModel);
-			if ($defaultObject && in_array($model, array_keys($defaultObject->getAssociated()), true) && isset($defaultObject->{$model})) {
+			if (in_array($model, array_keys($defaultObject->getAssociated()), true) && isset($defaultObject->{$model})) {
 				$object = $defaultObject->{$model};
 			}
 		} else {
@@ -199,7 +199,7 @@ class FormHelper extends AppHelper {
 					$this->fieldset[$object->alias]['fields'][$alias] = array('type' => 'multiple');
 				}
 			}
-			if (empty($field)) {
+			if ($field === null || $field === false) {
 				return $this->fieldset[$model]['fields'];
 			} elseif (isset($this->fieldset[$model]['fields'][$field])) {
 				return $this->fieldset[$model]['fields'][$field];
@@ -247,11 +247,15 @@ class FormHelper extends AppHelper {
 		if (empty($validationRules) || count($validationRules) === 0) {
 			return false;
 		}
+
+		$isUpdate = $this->requestType === 'put';
 		foreach ($validationRules as $rule) {
-			$rule->isUpdate($this->requestType === 'put');
-			if (!$rule->isEmptyAllowed()) {
-				return true;
+			$rule->isUpdate($isUpdate);
+			if ($rule->skip()) {
+				continue;
 			}
+
+			return !$rule->allowEmpty;
 		}
 		return false;
 	}
@@ -277,7 +281,7 @@ class FormHelper extends AppHelper {
 		if (empty($errors)) {
 			return false;
 		}
-		$errors = Hash::get($errors, implode('.', $entity));
+		$errors = Hash::get($errors, join('.', $entity));
 		return $errors === null ? false : $errors;
 	}
 
@@ -412,7 +416,7 @@ class FormHelper extends AppHelper {
 		$action = $this->url($options['action']);
 		unset($options['type'], $options['action']);
 
-		if (!$options['default']) {
+		if ($options['default'] == false) {
 			if (!isset($options['onsubmit'])) {
 				$options['onsubmit'] = '';
 			}
@@ -431,7 +435,7 @@ class FormHelper extends AppHelper {
 		$append .= $this->_csrfField();
 
 		if (!empty($append)) {
-			$append = $this->Html->useTag('hiddenblock', $append);
+			$append = $this->Html->useTag('block', ' style="display:none;"', $append);
 		}
 
 		if ($model !== false) {
@@ -538,7 +542,7 @@ class FormHelper extends AppHelper {
 
 		$locked = implode(array_keys($locked), '|');
 		$unlocked = implode($unlockedFields, '|');
-		$fields = Security::hash(serialize($fields) . $unlocked . Configure::read('Security.salt'), 'sha1');
+		$fields = Security::hash(serialize($fields) . $unlocked . Configure::read('Security.salt'));
 
 		$out = $this->hidden('_Token.fields', array(
 			'value' => urlencode($fields . ':' . $locked),
@@ -548,7 +552,7 @@ class FormHelper extends AppHelper {
 			'value' => urlencode($unlocked),
 			'id' => 'TokenUnlocked' . mt_rand()
 		));
-		return $this->Html->useTag('hiddenblock', $out);
+		return $this->Html->useTag('block', ' style="display:none;"', $out);
 	}
 
 /**
@@ -769,7 +773,7 @@ class FormHelper extends AppHelper {
  * @link http://book.cakephp.org/2.0/en/core-libraries/helpers/form.html#FormHelper::label
  */
 	public function label($fieldName = null, $text = null, $options = array()) {
-		if (empty($fieldName)) {
+		if ($fieldName === null) {
 			$fieldName = implode('.', $this->entity());
 		}
 
@@ -1294,7 +1298,7 @@ class FormHelper extends AppHelper {
 				'value' => ($options['hiddenField'] !== true ? $options['hiddenField'] : '0'),
 				'secure' => false
 			);
-			if (isset($options['disabled']) && $options['disabled']) {
+			if (isset($options['disabled']) && $options['disabled'] == true) {
 				$hiddenOptions['disabled'] = 'disabled';
 			}
 			$output = $this->hidden($fieldName, $hiddenOptions);
@@ -1586,7 +1590,7 @@ class FormHelper extends AppHelper {
 	}
 
 /**
- * Creates an HTML link, but access the url using the method you specify (defaults to POST).
+ * Creates an HTML link, but access the url using method POST.
  * Requires javascript to be enabled in browser.
  *
  * This method creates a `<form>` element. So do not use this method inside an existing form.
@@ -1607,11 +1611,6 @@ class FormHelper extends AppHelper {
  * @link http://book.cakephp.org/2.0/en/core-libraries/helpers/form.html#FormHelper::postLink
  */
 	public function postLink($title, $url = null, $options = array(), $confirmMessage = false) {
-		$requestMethod = 'POST';
-		if (!empty($options['method'])) {
-			$requestMethod = strtoupper($options['method']);
-			unset($options['method']);
-		}
 		if (!empty($options['confirm'])) {
 			$confirmMessage = $options['confirm'];
 			unset($options['confirm']);
@@ -1619,15 +1618,8 @@ class FormHelper extends AppHelper {
 
 		$formName = uniqid('post_');
 		$formUrl = $this->url($url);
-		$out = $this->Html->useTag('form', $formUrl, array(
-			'name' => $formName,
-			'id' => $formName,
-			'style' => 'display:none;',
-			'method' => 'post'
-		));
-		$out .= $this->Html->useTag('hidden', '_method', array(
-			'value' => $requestMethod
-		));
+		$out = $this->Html->useTag('form', $formUrl, array('name' => $formName, 'id' => $formName, 'style' => 'display:none;', 'method' => 'post'));
+		$out .= $this->Html->useTag('hidden', '_method', ' value="POST"');
 		$out .= $this->_csrfField();
 
 		$fields = array();
@@ -1773,9 +1765,6 @@ class FormHelper extends AppHelper {
  * - `escape` - If true contents of options will be HTML entity encoded. Defaults to true.
  * - `value` The selected value of the input.
  * - `class` - When using multiple = checkbox the classname to apply to the divs. Defaults to 'checkbox'.
- * - `disabled` - Control the disabled attribute.  When creating a select box, set to true to disable the
- *   select box.  When creating checkboxes, `true` will disable all checkboxes. You can also set disabled
- *   to a list of values you want to disable when creating checkboxes.
  *
  * ### Using options
  *
@@ -1789,11 +1778,11 @@ class FormHelper extends AppHelper {
  * While a nested options array will create optgroups with options inside them.
  * {{{
  * $options = array(
- *  1 => 'bill',
- *  'fred' => array(
- *     2 => 'fred',
- *     3 => 'fred jr.'
- *  )
+ *	1 => 'bill',
+ *	'fred' => array(
+ *		2 => 'fred',
+ *		3 => 'fred jr.'
+ *	 )
  * );
  * $this->Form->select('Model.field', $options);
  * }}}
@@ -1806,8 +1795,8 @@ class FormHelper extends AppHelper {
  *
  * {{{
  * $options = array(
- *  array('name' => 'United states', 'value' => 'USA'),
- *  array('name' => 'USA', 'value' => 'USA'),
+ *		array('name' => 'United states', 'value' => 'USA'),
+ *		array('name' => 'USA', 'value' => 'USA'),
  * );
  * }}}
  *
@@ -1828,8 +1817,7 @@ class FormHelper extends AppHelper {
 			'secure' => true,
 			'empty' => '',
 			'showParents' => false,
-			'hiddenField' => true,
-			'disabled' => false
+			'hiddenField' => true
 		);
 
 		$escapeOptions = $this->_extractOption('escape', $attributes);
@@ -1875,7 +1863,7 @@ class FormHelper extends AppHelper {
 			// Secure the field if there are options, or its a multi select.
 			// Single selects with no options don't submit, but multiselects do.
 			if (
-				(!isset($secure) || $secure) &&
+				(!isset($secure) || $secure == true) &&
 				empty($attributes['disabled']) &&
 				(!empty($attributes['multiple']) || $hasOptions)
 			) {
@@ -1909,8 +1897,7 @@ class FormHelper extends AppHelper {
 				'name' => $attributes['name'],
 				'value' => $attributes['value'],
 				'class' => $attributes['class'],
-				'id' => $attributes['id'],
-				'disabled' => $attributes['disabled'],
+				'id' => $attributes['id']
 			)
 		));
 
@@ -2492,22 +2479,6 @@ class FormHelper extends AppHelper {
 
 					if ($attributes['style'] === 'checkbox') {
 						$htmlOptions['value'] = $name;
-
-						$disabledType = null;
-						$hasDisabled = !empty($attributes['disabled']);
-						if ($hasDisabled) {
-							$disabledType = gettype($attributes['disabled']);
-						}
-						if (
-							$hasDisabled &&
-							$disabledType === 'array' &&
-							in_array($htmlOptions['value'], $attributes['disabled'])
-						) {
-							$htmlOptions['disabled'] = 'disabled';
-						}
-						if ($hasDisabled && $disabledType !== 'array') {
-							$htmlOptions['disabled'] = $attributes['disabled'] === true ? 'disabled' : $attributes['disabled'];
-						}
 
 						$tagName = $attributes['id'] . Inflector::camelize(Inflector::slug($name));
 						$htmlOptions['id'] = $tagName;

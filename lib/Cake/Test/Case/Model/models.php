@@ -2003,28 +2003,28 @@ class CallbackPostTestModel extends CakeTestModel {
 /**
  * variable to control return of beforeValidate
  *
- * @var boolean
+ * @var string
  */
 	public $beforeValidateReturn = true;
 
 /**
  * variable to control return of beforeSave
  *
- * @var boolean
+ * @var string
  */
 	public $beforeSaveReturn = true;
 
 /**
  * variable to control return of beforeDelete
  *
- * @var boolean
+ * @var string
  */
 	public $beforeDeleteReturn = true;
 
 /**
  * beforeSave callback
  *
- * @return boolean
+ * @return void
  */
 	public function beforeSave($options = array()) {
 		return $this->beforeSaveReturn;
@@ -2033,7 +2033,7 @@ class CallbackPostTestModel extends CakeTestModel {
 /**
  * beforeValidate callback
  *
- * @return boolean
+ * @return void
  */
 	public function beforeValidate($options = array()) {
 		return $this->beforeValidateReturn;
@@ -2042,7 +2042,7 @@ class CallbackPostTestModel extends CakeTestModel {
 /**
  * beforeDelete callback
  *
- * @return boolean
+ * @return void
  */
 	public function beforeDelete($cascade = true) {
 		return $this->beforeDeleteReturn;

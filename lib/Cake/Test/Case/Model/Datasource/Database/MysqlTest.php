@@ -268,13 +268,6 @@ class MysqlTest extends CakeTestCase {
 		$this->Dbo->rawQuery('DROP TABLE ' . $name);
 		$this->assertEquals($expected, $result);
 
-		$name = $this->Dbo->fullTableName('bigint');
-		$this->Dbo->rawQuery('CREATE TABLE ' . $name . ' (id bigint(20) AUTO_INCREMENT, bool tinyint(1), small_int tinyint(2), primary key(id));');
-		$expected = array('PRIMARY' => array('column' => 'id', 'unique' => 1));
-		$result = $this->Dbo->index('bigint', false);
-		$this->Dbo->rawQuery('DROP TABLE ' . $name);
-		$this->assertEquals($expected, $result);
-
 		$name = $this->Dbo->fullTableName('with_a_key');
 		$this->Dbo->rawQuery('CREATE TABLE ' . $name . ' (id int(11) AUTO_INCREMENT, bool tinyint(1), small_int tinyint(2), primary key(id), KEY `pointless_bool` ( `bool` ));');
 		$expected = array(
@@ -318,16 +311,6 @@ class MysqlTest extends CakeTestCase {
 			'other_way' => array('column' => array('small_int', 'bool'), 'unique' => 0),
 		);
 		$result = $this->Dbo->index('with_multiple_compound_keys', false);
-		$this->Dbo->rawQuery('DROP TABLE ' . $name);
-		$this->assertEquals($expected, $result);
-
-		$name = $this->Dbo->fullTableName('with_fulltext');
-		$this->Dbo->rawQuery('CREATE TABLE ' . $name . ' (id int(11) AUTO_INCREMENT, name varchar(255), description text, primary key(id), FULLTEXT KEY `MyFtIndex` ( `name`, `description` )) ENGINE=MyISAM;');
-		$expected = array(
-			'PRIMARY' => array('column' => 'id', 'unique' => 1),
-			'MyFtIndex' => array('column' => array('name', 'description'), 'type' => 'fulltext')
-		);
-		$result = $this->Dbo->index('with_fulltext', false);
 		$this->Dbo->rawQuery('DROP TABLE ' . $name);
 		$this->assertEquals($expected, $result);
 	}
@@ -494,10 +477,6 @@ class MysqlTest extends CakeTestCase {
 		$expected = 'integer';
 		$this->assertEquals($expected, $result);
 
-		$result = $this->Dbo->column('bigint(20)');
-		$expected = 'biginteger';
-		$this->assertEquals($expected, $result);
-
 		$result = $this->Dbo->column('tinyint(1)');
 		$expected = 'boolean';
 		$this->assertEquals($expected, $result);
@@ -569,9 +548,9 @@ class MysqlTest extends CakeTestCase {
 
 		$result = $this->Dbo->alterSchema($schemaB->compare($schemaA));
 		$this->assertContains("ALTER TABLE $table", $result);
-		$this->assertContains('ADD KEY `name_idx` (`name`),', $result);
-		$this->assertContains('ADD KEY `group_idx` (`group1`),', $result);
-		$this->assertContains('ADD KEY `compound_idx` (`group1`, `group2`),', $result);
+		$this->assertContains('ADD KEY name_idx (`name`),', $result);
+		$this->assertContains('ADD KEY group_idx (`group1`),', $result);
+		$this->assertContains('ADD KEY compound_idx (`group1`, `group2`),', $result);
 		$this->assertContains('ADD PRIMARY KEY  (`id`);', $result);
 
 		//Test that the string is syntactically correct
@@ -597,13 +576,13 @@ class MysqlTest extends CakeTestCase {
 		$result = $this->Dbo->alterSchema($schemaC->compare($schemaB));
 		$this->assertContains("ALTER TABLE $table", $result);
 		$this->assertContains('DROP PRIMARY KEY,', $result);
-		$this->assertContains('DROP KEY `name_idx`,', $result);
-		$this->assertContains('DROP KEY `group_idx`,', $result);
-		$this->assertContains('DROP KEY `compound_idx`,', $result);
-		$this->assertContains('ADD KEY `id_name_idx` (`id`, `name`),', $result);
-		$this->assertContains('ADD UNIQUE KEY `name_idx` (`name`),', $result);
-		$this->assertContains('ADD KEY `group_idx` (`group2`),', $result);
-		$this->assertContains('ADD KEY `compound_idx` (`group2`, `group1`);', $result);
+		$this->assertContains('DROP KEY name_idx,', $result);
+		$this->assertContains('DROP KEY group_idx,', $result);
+		$this->assertContains('DROP KEY compound_idx,', $result);
+		$this->assertContains('ADD KEY id_name_idx (`id`, `name`),', $result);
+		$this->assertContains('ADD UNIQUE KEY name_idx (`name`),', $result);
+		$this->assertContains('ADD KEY group_idx (`group2`),', $result);
+		$this->assertContains('ADD KEY compound_idx (`group2`, `group1`);', $result);
 
 		$query = $this->Dbo->getConnection()->prepare($result);
 		$this->assertEquals($query->queryString, $result);
@@ -615,10 +594,10 @@ class MysqlTest extends CakeTestCase {
 		$result = $this->Dbo->alterSchema($schemaA->compare($schemaC));
 
 		$this->assertContains("ALTER TABLE $table", $result);
-		$this->assertContains('DROP KEY `name_idx`,', $result);
-		$this->assertContains('DROP KEY `group_idx`,', $result);
-		$this->assertContains('DROP KEY `compound_idx`,', $result);
-		$this->assertContains('DROP KEY `id_name_idx`;', $result);
+		$this->assertContains('DROP KEY name_idx,', $result);
+		$this->assertContains('DROP KEY group_idx,', $result);
+		$this->assertContains('DROP KEY compound_idx,', $result);
+		$this->assertContains('DROP KEY id_name_idx;', $result);
 
 		$query = $this->Dbo->getConnection()->prepare($result);
 		$this->assertEquals($query->queryString, $result);
@@ -773,7 +752,7 @@ class MysqlTest extends CakeTestCase {
 	}
 
 /**
- * testGetCharsetName method
+ * testBuildTableParameters method
  *
  * @return void
  */
@@ -783,34 +762,6 @@ class MysqlTest extends CakeTestCase {
 		$this->assertEquals('utf8', $result);
 		$result = $this->Dbo->getCharsetName('cp1250_general_ci');
 		$this->assertEquals('cp1250', $result);
-	}
-
-/**
- * testGetCharsetNameCaching method
- *
- * @return void
- */
-	public function testGetCharsetNameCaching() {
-		$db = $this->getMock('Mysql', array('connect', '_execute', 'getVersion'));
-		$queryResult = $this->getMock('PDOStatement');
-
-		$db->expects($this->exactly(2))->method('getVersion')->will($this->returnValue('5.1'));
-
-		$db->expects($this->exactly(1))
-			->method('_execute')
-			->with('SELECT CHARACTER_SET_NAME FROM INFORMATION_SCHEMA.COLLATIONS WHERE COLLATION_NAME = ?', array('utf8_unicode_ci'))
-			->will($this->returnValue($queryResult));
-
-		$queryResult->expects($this->once())
-			->method('fetch')
-			->with(PDO::FETCH_ASSOC)
-			->will($this->returnValue(array('CHARACTER_SET_NAME' => 'utf8')));
-
-		$result = $db->getCharsetName('utf8_unicode_ci');
-		$this->assertEquals('utf8', $result);
-
-		$result = $db->getCharsetName('utf8_unicode_ci');
-		$this->assertEquals('utf8', $result);
 	}
 
 /**
@@ -2009,7 +1960,7 @@ class MysqlTest extends CakeTestCase {
 		$this->assertEquals($expected, $result);
 
 		$result = $this->Dbo->conditions(array('score' => array(2 => 1, 2, 10)));
-		$expected = " WHERE score IN (1, 2, 10)";
+		$expected = " WHERE `score` IN (1, 2, 10)";
 		$this->assertEquals($expected, $result);
 
 		$result = $this->Dbo->conditions("Aro.rght = Aro.lft + 1.1");
@@ -2289,7 +2240,7 @@ class MysqlTest extends CakeTestCase {
 		$this->assertEquals($expected, $result);
 
 		$result = $this->Dbo->conditions(array('score' => array(1, 2, 10)));
-		$expected = " WHERE score IN (1, 2, 10)";
+		$expected = " WHERE `score` IN (1, 2, 10)";
 		$this->assertEquals($expected, $result);
 
 		$result = $this->Dbo->conditions(array('score' => array()));
@@ -2380,7 +2331,7 @@ class MysqlTest extends CakeTestCase {
 			'NOT' => array('Course.id' => null, 'Course.vet' => 'N', 'level_of_education_id' => array(912,999)),
 			'Enrollment.yearcompleted >' => '0')
 		);
-		$this->assertRegExp('/^\s*WHERE\s+\(NOT\s+\(`Course`\.`id` IS NULL\)\s+AND NOT\s+\(`Course`\.`vet`\s+=\s+\'N\'\)\s+AND NOT\s+\(level_of_education_id IN \(912, 999\)\)\)\s+AND\s+`Enrollment`\.`yearcompleted`\s+>\s+\'0\'\s*$/', $result);
+		$this->assertRegExp('/^\s*WHERE\s+\(NOT\s+\(`Course`\.`id` IS NULL\)\s+AND NOT\s+\(`Course`\.`vet`\s+=\s+\'N\'\)\s+AND NOT\s+\(`level_of_education_id` IN \(912, 999\)\)\)\s+AND\s+`Enrollment`\.`yearcompleted`\s+>\s+\'0\'\s*$/', $result);
 
 		$result = $this->Dbo->conditions(array('id <>' => '8'));
 		$this->assertRegExp('/^\s*WHERE\s+`id`\s+<>\s+\'8\'\s*$/', $result);
@@ -2416,7 +2367,7 @@ class MysqlTest extends CakeTestCase {
 
 		$conditions = array('id' => array(2, 5, 6, 9, 12, 45, 78, 43, 76));
 		$result = $this->Dbo->conditions($conditions);
-		$expected = " WHERE id IN (2, 5, 6, 9, 12, 45, 78, 43, 76)";
+		$expected = " WHERE `id` IN (2, 5, 6, 9, 12, 45, 78, 43, 76)";
 		$this->assertEquals($expected, $result);
 
 		$conditions = array('title' => 'user(s)');
@@ -2951,13 +2902,6 @@ class MysqlTest extends CakeTestCase {
 		$result = $this->Dbo->buildIndex($data);
 		$expected = array('UNIQUE KEY `MyIndex` (`id`, `name`)');
 		$this->assertEquals($expected, $result);
-
-		$data = array(
-			'MyFtIndex' => array('column' => array('name', 'description'), 'type' => 'fulltext')
-		);
-		$result = $this->Dbo->buildIndex($data);
-		$expected = array('FULLTEXT KEY `MyFtIndex` (`name`, `description`)');
-		$this->assertEquals($expected, $result);
 	}
 
 /**
@@ -3361,7 +3305,7 @@ class MysqlTest extends CakeTestCase {
 		);
 
 		$conditions = array('comment_count >' => 2);
-		$query = 'SELECT ' . implode(',', $this->Dbo->fields($Article, null, array('id', 'comment_count'))) .
+		$query = 'SELECT ' . join(',', $this->Dbo->fields($Article, null, array('id', 'comment_count'))) .
 				' FROM ' . $this->Dbo->fullTableName($Article) . ' Article ' . $this->Dbo->conditions($conditions, true, true, $Article);
 		$result = $this->Dbo->fetchAll($query);
 		$expected = array(array(

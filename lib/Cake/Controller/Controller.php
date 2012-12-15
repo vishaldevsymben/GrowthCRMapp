@@ -319,7 +319,7 @@ class Controller extends Object implements CakeEventListener {
 			$this->name = substr(get_class($this), 0, -10);
 		}
 
-		if (!$this->viewPath) {
+		if ($this->viewPath == null) {
 			$this->viewPath = $this->name;
 		}
 
@@ -454,7 +454,7 @@ class Controller extends Object implements CakeEventListener {
 			$this->passedArgs = array_merge($request->params['pass'], $request->params['named']);
 		}
 
-		if (!empty($request->params['return']) && $request->params['return'] == 1) {
+		if (array_key_exists('return', $request->params) && $request->params['return'] == 1) {
 			$this->autoRender = false;
 		}
 		if (!empty($request->params['bare'])) {
@@ -755,7 +755,7 @@ class Controller extends Object implements CakeEventListener {
 			extract($status, EXTR_OVERWRITE);
 		}
 		$event = new CakeEvent('Controller.beforeRedirect', $this, array($url, $status, $exit));
-		//TODO: Remove the following line when the events are fully migrated to the CakeEventManager
+
 		list($event->break, $event->breakOn, $event->collectReturn) = array(true, false, true);
 		$this->getEventManager()->dispatch($event);
 
@@ -966,15 +966,14 @@ class Controller extends Object implements CakeEventListener {
  * @link http://book.cakephp.org/2.0/en/controllers.html#Controller::referer
  */
 	public function referer($default = null, $local = false) {
-		if (!$this->request) {
-			return '/';
+		if ($this->request) {
+			$referer = $this->request->referer($local);
+			if ($referer == '/' && $default != null) {
+				return Router::url($default, true);
+			}
+			return $referer;
 		}
-
-		$referer = $this->request->referer($local);
-		if ($referer == '/' && $default) {
-			return Router::url($default, true);
-		}
-		return $referer;
+		return '/';
 	}
 
 /**
@@ -1062,7 +1061,7 @@ class Controller extends Object implements CakeEventListener {
 				$cond[$key] = $value;
 			}
 		}
-		if ($bool && strtoupper($bool) != 'AND') {
+		if ($bool != null && strtoupper($bool) != 'AND') {
 			$cond = array($bool => $cond);
 		}
 		return $cond;

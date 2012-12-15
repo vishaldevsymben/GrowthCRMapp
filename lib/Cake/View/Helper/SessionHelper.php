@@ -134,7 +134,7 @@ class SessionHelper extends AppHelper {
 					$class = $flash['params']['class'];
 				}
 				$out = '<div id="' . $key . 'Message" class="' . $class . '">' . $message . '</div>';
-			} elseif (!$flash['element']) {
+			} elseif ($flash['element'] == '' || $flash['element'] == null) {
 				$out = $message;
 			} else {
 				$options = array();

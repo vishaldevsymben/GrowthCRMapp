@@ -209,6 +209,12 @@ class Dispatcher implements CakeEventListener {
 	public function parseParams($event) {
 		$request = $event->data['request'];
 		Router::setRequestInfo($request);
+		if (count(Router::$routes) == 0) {
+			$namedExpressions = Router::getNamedExpressions();
+			extract($namedExpressions);
+			$this->_loadRoutes();
+		}
+
 		$params = Router::parse($request->url);
 		$request->addParams($params);
 
@@ -261,6 +267,15 @@ class Dispatcher implements CakeEventListener {
 			}
 		}
 		return false;
+	}
+
+/**
+ * Loads route configuration
+ *
+ * @return void
+ */
+	protected function _loadRoutes() {
+		include APP . 'Config' . DS . 'routes.php';
 	}
 
 }

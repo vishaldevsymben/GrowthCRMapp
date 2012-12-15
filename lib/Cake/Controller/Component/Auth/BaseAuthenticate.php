@@ -66,46 +66,32 @@ abstract class BaseAuthenticate {
 /**
  * Find a user record using the standard options.
  *
- * The $conditions parameter can be a (string)username or an array containing conditions for Model::find('first'). If
- * the password field is not included in the conditions the password will be returned.
- *
- * @param Mixed $conditions The username/identifier, or an array of find conditions.
- * @param Mixed $password The password, only use if passing as $conditions = 'username'.
+ * @param string $username The username/identifier.
+ * @param string $password The unhashed password.
  * @return Mixed Either false on failure, or an array of user data.
  */
-	protected function _findUser($conditions, $password = null) {
+	protected function _findUser($username, $password) {
 		$userModel = $this->settings['userModel'];
 		list($plugin, $model) = pluginSplit($userModel);
 		$fields = $this->settings['fields'];
 
-		if (!is_array($conditions)) {
-			if (!$password) {
-				return false;
-			}
-			$username = $conditions;
-			$conditions = array(
-				$model . '.' . $fields['username'] => $username,
-				$model . '.' . $fields['password'] => $this->_password($password),
-			);
-		}
+		$conditions = array(
+			$model . '.' . $fields['username'] => $username,
+			$model . '.' . $fields['password'] => $this->_password($password),
+		);
 		if (!empty($this->settings['scope'])) {
 			$conditions = array_merge($conditions, $this->settings['scope']);
 		}
 		$result = ClassRegistry::init($userModel)->find('first', array(
 			'conditions' => $conditions,
-			'recursive' => (int)$this->settings['recursive'],
+			'recursive' => $this->settings['recursive'],
 			'contain' => $this->settings['contain'],
 		));
 		if (empty($result) || empty($result[$model])) {
 			return false;
 		}
 		$user = $result[$model];
-		if (
-			isset($conditions[$model . '.' . $fields['password']]) ||
-			isset($conditions[$fields['password']])
-		) {
-			unset($user[$fields['password']]);
-		}
+		unset($user[$fields['password']]);
 		unset($result[$model]);
 		return array_merge($user, $result);
 	}
