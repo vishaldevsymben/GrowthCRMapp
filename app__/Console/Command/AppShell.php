@@ -1,9 +1,6 @@
 <?php
 /**
- * Application level Controller
- *
- * This file is application-wide controller file. You can put all
- * application-wide controller-related methods here.
+ * AppShell file
  *
  * PHP 5
  *
@@ -15,23 +12,20 @@
  *
  * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
- * @package       app.Controller
- * @since         CakePHP(tm) v 0.2.9
+ * @since         CakePHP(tm) v 2.0
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
-App::uses('Controller', 'Controller');
+App::uses('Shell', 'Console');
 
 /**
- * Application Controller
+ * Application Shell
  *
- * Add your application-wide methods in the class below, your controllers
+ * Add your application-wide methods in the class below, your shells
  * will inherit them.
  *
- * @package       app.Controller
- * @link http://book.cakephp.org/2.0/en/controllers.html#the-app-controller
+ * @package       app.Console.Command
  */
-class AppController extends Controller {
-	
-	
+class AppShell extends Shell {
+
 }

@@ -16,12 +16,11 @@
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
-
-p
-{
-	margin:0px;
-	padding:0px;
+* {
+	margin:0;
+	padding:0;
 }
+
 /** General Style Info **/
 body {
 	background: #003d4c;
@@ -69,7 +68,9 @@ h4 {
 ul, li {
 	margin: 0 12px;
 }
-
+p {
+	margin: 0 0 1em 0;
+}
 
 /** Layout **/
 #container {
@@ -155,10 +156,10 @@ th a.desc:after {
 	content: ' ⇡';
 }
 table tr td {
-	
+	padding: 6px;
 	text-align: left;
-	
-	
+	vertical-align: top;
+	border-bottom:1px solid #ddd;
 }
 table tr:nth-child(even) {
 	background: #f9f9f9;
@@ -283,13 +284,16 @@ fieldset fieldset div {
 }
 form div {
 	clear: both;
-	
+	margin-bottom: 1em;
+	padding: .5em;
 	vertical-align: text-top;
 }
 form .input {
 	color: #444;
 }
-
+form .required {
+	font-weight: bold;
+}
 form .required label:after {
 	color: #e32;
 	content: '*';
@@ -301,19 +305,20 @@ form div.submit {
 	margin-top: 10px;
 }
 label {
-	
+	display: block;
+	font-size: 110%;
 	margin-bottom:3px;
 }
 input, textarea {
 	clear: both;
-	
+	font-size: 140%;
 	font-family: "frutiger linotype", "lucida grande", "verdana", sans-serif;
-	
+	padding: 1%;
 	width:98%;
 }
 select {
 	clear: both;
-	
+	font-size: 120%;
 	vertical-align: text-bottom;
 }
 select[multiple=multiple] {

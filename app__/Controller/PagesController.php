@@ -43,9 +43,8 @@ class PagesController extends AppController {
  *
  * @var array
  */
-	public $uses = array('User');
-    var $helpers = array('Html', 'Form', 'Javascript');
-	var $components = array('Mailer','FileUpload', 'Session','Cookie');
+	public $uses = array();
+
 /**
  * Displays a view
  *
@@ -53,10 +52,6 @@ class PagesController extends AppController {
  * @return void
  */
 	public function display() {
-		
-		$this->layout = 'default'; 
-		
-		
 		$path = func_get_args();
 
 		$count = count($path);
@@ -75,20 +70,6 @@ class PagesController extends AppController {
 			$title_for_layout = Inflector::humanize($path[$count - 1]);
 		}
 		$this->set(compact('page', 'subpage', 'title_for_layout'));
-		
-		
-		
-		if (method_exists($this, $page)) { 
-
-    		$this->$page(); 
-
-    		$this->render($page);
-
-    		return;
-
-  		} 
-
-		
 		$this->render(implode('/', $path));
 	}
 }
